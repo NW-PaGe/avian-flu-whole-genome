@@ -1,0 +1,23 @@
+build_name: h5n1-franklin-county-whole-genome
+subtype: h5n1
+segments:
+  - pb2
+  - pb1
+  - pa
+  - ha
+  - np
+  - na
+  - mp
+  - ns
+reference_files: "config/reference_h5n1_{segment}.gb"
+sequence_files: "ingest_files_manuscript/{segment}_sequences.fasta"
+metadata: "ingest_files_manuscript/merged_metadata.tsv"
+include: "ingest_files_manuscript/includes.txt"
+exclude: "ingest_files_manuscript/excludes.txt"
+colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
+auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
+new_sequences: "ingest_files_manuscript/Franklin03.fas"
+realign_reference: "config/h5_cattle_genome_root.gb"
+output_dir: "results"
+export_prefix: "auspice/avian-flu_{build_name}.json"
+
