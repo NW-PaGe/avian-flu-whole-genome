@@ -18,6 +18,8 @@
 # per-segment snakefile. A config YAML would help abstract some of this out.
 # -----------------------------------------------
 
+configfile: "profiles/wadoh/config.yaml"
+
 # Segment order determines how the full genome annotation (entropy panel) is set up
 # using the canonical ordering <https://viralzone.expasy.org/6>
 SEGMENTS = ["pb2", "pb1", "pa", "ha", "np", "na", "mp", "ns"]
@@ -48,10 +50,10 @@ rule all:
 rule files:
     params:
         reference = lambda w: f"config/reference_{subtype(w.build_name)}_{{segment}}.gb",
-        sequences = "ingest_files_manuscript/{segment}_sequences.fasta",
-        metadata = "ingest_files_manuscript/merged_metadata.tsv",
-        include = "ingest_files_manuscript/includes.txt",
-        exclude = "ingest_files_manuscript/excludes.txt",
+        sequences = config["files"]["sequences"],
+        metadata = config["files"]["metadata"],
+        include = config["files"]["include"],
+        exclude =config["files"]["exclude"],
         #dropped_strains = "config/dropped_strains_{build_name}.txt",
         colors = "config/colors_h5n1-franklin-county-outbreak.tsv",
         #lat_longs =  lambda w: f"config/lat_longs_{subtype(w.build_name)}.tsv",
@@ -67,9 +69,10 @@ rule filter:
         include = files.include,
         exclude = files.exclude
         #exclude = files.dropped_strains
-    #params:
+    params:
         #min_date = "2024-01-01",
         #query = 'region == "North America"'
+        max_seq = config["subsampling"]["max_sequences"]
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
     log: "logs/{build_name}/genome/sequences_{segment}.txt"
@@ -78,6 +81,7 @@ rule filter:
         augur filter \
             --sequences {input.sequences} \
             --metadata {input.metadata} \
+            --subsample-max-sequences {params.max_seq} \
             --output-log {log} \
             --output-sequences {output.sequences} \
             --exclude {input.exclude} \
@@ -119,7 +123,7 @@ rule join_sequences:
 rule add_whole_genome:
     input:
         alignment = "results/{build_name}/genome/aligned.fasta",
-        new_sequences = "ingest_files_manuscript/Franklin03.fas"
+        new_sequences = "test_data/Franklin03.fas"
     output:
         combined_alignment = "results/{build_name}/genome/aligned_with_franklin.fasta"
     shell:

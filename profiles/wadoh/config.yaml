@@ -1,0 +1,25 @@
+#This configuration file contains custom configuration parameters for the WA State avian-flue-whole-genome build
+
+
+build_name: 'avian-flu-whole-genome'
+segments:
+  - pb2
+  - pb1
+  - pa
+  - ha
+  - np
+  - na
+  - mp
+  - ns
+
+files:
+    reference_files: "config/reference_h5n1_{segment}.gb"
+    sequences: "test_data/fasta/{segment}_sequences.fasta"
+    metadata: "test_data/metadata/merged_metadata.tsv"
+    include: "ingest_files_manuscript/includes.txt"
+    exclude: "ingest_files_manuscript/excludes.txt"
+    colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
+    auspice_config: "config/auspice_config.json"
+
+subsampling:
+    max_sequences: 50
