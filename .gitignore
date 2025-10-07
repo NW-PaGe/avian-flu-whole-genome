@@ -7,3 +7,5 @@
 results/*
 logs/*
 auspice/*
+test_data/fasta/*
+test_data/metadata/*
