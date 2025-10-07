@@ -85,7 +85,6 @@ rule filter:
         augur filter \
             --sequences {input.sequences} \
             --metadata {input.metadata} \
-            --subsample-max-sequences {params.max_seq} \
             --output-log {log} \
             --output-sequences {output.sequences} \
             --exclude {input.exclude} \
