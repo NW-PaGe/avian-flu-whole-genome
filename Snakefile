@@ -19,7 +19,6 @@
 # -----------------------------------------------
 configfile: "phylogenetic/build-configs/wa-config.yaml"
 
-configfile: "profiles/wadoh/config.yaml"
 
 # Segment order determines how the full genome annotation (entropy panel) is set up
 # using the canonical ordering <https://viralzone.expasy.org/6>
@@ -77,11 +76,7 @@ rule filter:
     params:
         #min_date = "2024-01-01",
         #query = 'region == "North America"'
-<<<<<<< Updated upstream
-        max_seq = config["subsampling"]["max_sequences"]
-=======
         #max_sequences = config["subsampling"]["max_sequences"]
->>>>>>> Stashed changes
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
     log: "logs/{build_name}/genome/sequences_{segment}.txt"
@@ -129,18 +124,6 @@ rule join_sequences:
             --output {output.alignment}
         """
 
-<<<<<<< Updated upstream
-rule add_whole_genome:
-    input:
-        alignment = "results/{build_name}/genome/aligned.fasta",
-        new_sequences = "test_data/Franklin03.fas"
-    output:
-        combined_alignment = "results/{build_name}/genome/aligned_with_franklin.fasta"
-    shell:
-        """
-        cat {input.alignment} {input.new_sequences} > {output.combined_alignment}
-        """
-=======
 #rule add_whole_genome:
 #    input:
 #        alignment = "results/{build_name}/genome/aligned.fasta",
