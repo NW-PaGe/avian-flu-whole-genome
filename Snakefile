@@ -53,11 +53,7 @@ rule files:
         sequences = config["files"]["sequences"],
         metadata = config["files"]["metadata"],
         include = config["files"]["include"],
-<<<<<<< Updated upstream
-        exclude =config["files"]["exclude"],
-=======
         exclude = config["files"]["exclude"],
->>>>>>> Stashed changes
         #dropped_strains = "config/dropped_strains_{build_name}.txt",
         colors = config["files"]["colors"],
         #lat_longs =  lambda w: f"config/lat_longs_{subtype(w.build_name)}.tsv",
@@ -133,7 +129,6 @@ rule join_sequences:
 #        """
 #        cat {input.alignment} {input.new_sequences} > {output.combined_alignment}
 #        """
->>>>>>> Stashed changes
 
 #rule realign:
 #    input:
