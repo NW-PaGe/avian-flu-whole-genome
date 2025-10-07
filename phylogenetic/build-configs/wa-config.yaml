@@ -26,8 +26,8 @@ files:
     reference_files: "config/reference_h5n1_{segment}.gb"
     sequences: "test_data/fasta/{segment}_sequences.fasta"
     metadata: "test_data/metadata/merged_metadata.tsv"
-    include: "test_data/includes.txt"
-    exclude: "test_data/excludes.txt"
+    include: "test_data/include.txt"
+    exclude: "test_data/exclude.txt"
     colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
     auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
 

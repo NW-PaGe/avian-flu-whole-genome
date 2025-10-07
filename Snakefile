@@ -22,10 +22,10 @@ configfile: "phylogenetic/build-configs/wa-config.yaml"
 
 # Segment order determines how the full genome annotation (entropy panel) is set up
 # using the canonical ordering <https://viralzone.expasy.org/6>
-SEGMENTS = ["pb2", "pb1", "pa", "ha", "np", "na", "mp", "ns"]
+SEGMENTS = config["segments"]
 assert len(set(SEGMENTS))==len(SEGMENTS), "Duplicate segment detected - check 'SEGMENTS' list"
 
-BUILD_NAME = ['h5n1-franklin-county-whole-genome']
+BUILD_NAME = [config["build_name"]]
 
 # We parameterise the build by build_name, but we often refer to upstream files / sources by the subtype
 def subtype(build_name):
