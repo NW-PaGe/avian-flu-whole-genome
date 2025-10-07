@@ -10,6 +10,13 @@ segments:
   - na
   - mp
   - ns
+
+subtype_query:
+    "h5nx/*/*": "subtype in ['h5n1', 'h5n2', 'h5n3', 'h5n4', 'h5n5', 'h5n6', 'h5n7', 'h5n8', 'h5n9']"
+    "h5n1/*/*": "subtype in ['h5n1']"
+    "h7n9/*/*": "subtype in ['h7n9']"
+    "h9n2/*/*": "subtype in ['h9n2']"
+
 #reference_files: "config/reference_h5n1_{segment}.gb"
 #sequence_files: "test_data/fasta/{segment}_sequences.fasta"
 #metadata: "test_data/metadata/merged_metadata.tsv"
