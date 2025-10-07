@@ -17,6 +17,8 @@
 # For rules from tree onwards there is a lot of duplication between this snakefile and the
 # per-segment snakefile. A config YAML would help abstract some of this out.
 # -----------------------------------------------
+configfile: "phylogenetic/build-configs/wa-config.yaml"
+
 
 # Segment order determines how the full genome annotation (entropy panel) is set up
 # using the canonical ordering <https://viralzone.expasy.org/6>
@@ -48,14 +50,14 @@ rule all:
 rule files:
     params:
         reference = lambda w: f"config/reference_{subtype(w.build_name)}_{{segment}}.gb",
-        sequences = "ingest_files_manuscript/{segment}_sequences.fasta",
-        metadata = "ingest_files_manuscript/merged_metadata.tsv",
-        include = "ingest_files_manuscript/includes.txt",
-        exclude = "ingest_files_manuscript/excludes.txt",
+        sequences = config["files"]["sequences"],
+        metadata = config["files"]["metadata"],
+        include = config["files"]["include"],
+        exclude = config["files"]["exclude"],
         #dropped_strains = "config/dropped_strains_{build_name}.txt",
-        colors = "config/colors_h5n1-franklin-county-outbreak.tsv",
+        colors = config["files"]["colors"],
         #lat_longs =  lambda w: f"config/lat_longs_{subtype(w.build_name)}.tsv",
-        auspice_config = "config/auspice_config_h5n1-franklin-county-outbreak.json",
+        auspice_config = config["files"]["auspice_config"],
         #description = "config/description_{build_name}.md"
 
 files = rules.files.params
@@ -67,9 +69,10 @@ rule filter:
         include = files.include,
         exclude = files.exclude
         #exclude = files.dropped_strains
-    #params:
+    params:
         #min_date = "2024-01-01",
         #query = 'region == "North America"'
+        #max_sequences = config["subsampling"]["max_sequences"]
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
     log: "logs/{build_name}/genome/sequences_{segment}.txt"
@@ -108,7 +111,7 @@ rule join_sequences:
     input:
         alignment = expand("results/{{build_name}}/genome/aligned_{segment}.fasta", segment=SEGMENTS),
     output:
-        alignment = "results/{build_name}/genome/aligned.fasta",
+        alignment = "results/{build_name}/genome/aligned_final.fasta",
     shell:
         """
         python scripts/join-segments.py \
@@ -116,34 +119,34 @@ rule join_sequences:
             --output {output.alignment}
         """
 
-rule add_whole_genome:
-    input:
-        alignment = "results/{build_name}/genome/aligned.fasta",
-        new_sequences = "ingest_files_manuscript/Franklin03.fas"
-    output:
-        combined_alignment = "results/{build_name}/genome/aligned_with_franklin.fasta"
-    shell:
-        """
-        cat {input.alignment} {input.new_sequences} > {output.combined_alignment}
-        """
+#rule add_whole_genome:
+#    input:
+#        alignment = "results/{build_name}/genome/aligned.fasta",
+#        new_sequences = "ingest_files_manuscript/Franklin03.fas"
+#    output:
+#        combined_alignment = "results/{build_name}/genome/aligned_with_franklin.fasta"
+#    shell:
+#        """
+#        cat {input.alignment} {input.new_sequences} > {output.combined_alignment}
+#        """
 
-rule realign:
-    input:
-        sequences = "results/{build_name}/genome/aligned_with_franklin.fasta",
-        reference = "config/h5_cattle_genome_root.gb"
-    output:
-        alignment = "results/{build_name}/genome/aligned_final.fasta"
-    threads: 8
-    shell:
-        """
-        augur align \
-            --sequences {input.sequences} \
-            --reference-sequence {input.reference} \
-            --output {output.alignment} \
-            --remove-reference \
-            --fill-gaps \
-            --nthreads {threads}
-        """
+#rule realign:
+#    input:
+#        sequences = "results/{build_name}/genome/aligned_with_franklin.fasta",
+#        reference = "config/h5_cattle_genome_root.gb"
+#    output:
+#        alignment = "results/{build_name}/genome/aligned_final.fasta"
+#    threads: 8
+#    shell:
+#        """
+#        augur align \
+#            --sequences {input.sequences} \
+#            --reference-sequence {input.reference} \
+#            --output {output.alignment} \
+#            --remove-reference \
+#            --fill-gaps \
+#            --nthreads {threads}
+#        """
 
 rule join_genbank:
     input:
