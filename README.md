@@ -35,16 +35,16 @@ This build relies on publicly available data sourced from GISAID. These data hav
 - **Metadata**: Sample collection metadata from GISAID
 - **Expected Inputs**:
     - fasta files: (containing viral genome sequences per segment of genome)
-        - `data/fasta/pb2_sequences.fasta`
-        - `data/fasta/pb1_sequences.fasta`
-        - `data/fasta/pa_sequences.fasta`
-        - `data/fasta/ha_sequences.fasta`
-        - `data/fasta/np_sequences.fasta`
-        - `data/fasta/na_sequences.fasta`
-        - `data/fasta/mp_sequences.fasta`
-        - `data/fasta/ns_sequences.fasta`             
+        - `test_data/fasta/pb2_sequences.fasta`
+        - `test_data/fasta/pb1_sequences.fasta`
+        - `test_data/fasta/pa_sequences.fasta`
+        - `test_data/fasta/ha_sequences.fasta`
+        - `test_data/fasta/np_sequences.fasta`
+        - `test_data/fasta/na_sequences.fasta`
+        - `test_data/fasta/mp_sequences.fasta`
+        - `test_data/fasta/ns_sequences.fasta`             
     - metadata files:  (with relevant sample information)
-        - `data/metadata/metadata.xlsx`
+        - `test_data/metadata/merged_metadata.tsv`
 
 ### Setup & Dependencies
 #### Installation
@@ -54,7 +54,7 @@ To check that Nextstrain is installed:
 ```
 nextstrain check-setup
 ```
-If Nextstrain is not installed, follow [Nextstrian installation guidelines](https://docs.nextstrain.org/en/latest/install.html)
+If Nextstrain is not installed, follow [Nextstrain installation guidelines](https://docs.nextstrain.org/en/latest/install.html)
 
 #### Clone the repository:
 
@@ -64,9 +64,9 @@ cd avian-flu-whole-genome
 ```
 
 ## Run the Build with Test Data
-Test data coming soon.
-
-
+```
+nextstrain build .
+```
 
 ## Repository File Structure Overview
 The file structure of the repository is as follows with `*`" folders denoting folders that are the build's expected outputs.
