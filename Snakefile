@@ -17,7 +17,7 @@
 # For rules from tree onwards there is a lot of duplication between this snakefile and the
 # per-segment snakefile. A config YAML would help abstract some of this out.
 # -----------------------------------------------
-configfile: "phylogenetic/build-configs/wa-config.yaml"
+configfile: "phylogenetic/build-configs/wa-config-augur-sub.yaml"
 
 
 # Segment order determines how the full genome annotation (entropy panel) is set up
@@ -29,7 +29,7 @@ BUILD_NAME = [config["build_name"]]
 
 # We parameterise the build by build_name, but we often refer to upstream files / sources by the subtype
 def subtype(build_name):
-    assert build_name=='h5n1-franklin-county-whole-genome', "Full genome build for 'h5n1-franklin-county-whole-genome' "
+    assert build_name=='h5n1-whole-genome', "Full genome build for 'h5n1-whole-genome' "
     return 'h5n1'
 
 def subtypes_by_subtype_wildcard(wildcards):
@@ -62,25 +62,51 @@ rule files:
 
 files = rules.files.params
 
+#rule filter:
+#    input:
+#        sequences = files.sequences,
+#        metadata = files.metadata,
+#        include = files.include,
+#        exclude = files.exclude
+#        #exclude = files.dropped_strains
+#    params:
+#        #min_date = "2024-01-01",
+#        #query = 'region == "North America"'
+#        #max_sequences = config["subsampling"]["max_sequences"]
+#    output:
+#        sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
+#    log: "logs/{build_name}/genome/sequences_{segment}.txt"
+#    shell:
+#        """
+#        augur filter \
+#            --sequences {input.sequences} \
+#            --metadata {input.metadata} \
+#            --output-log {log} \
+#            --output-sequences {output.sequences} \
+#            --exclude {input.exclude} \
+#            --include {input.include} \
+#        """
+
 rule filter:
+    """
+    Filtering using augur subsample
+    """
     input:
         sequences = files.sequences,
         metadata = files.metadata,
+        config = "results/run_config.yaml",
+        config_section = ["builds", "h5n1-whole-genome", "subsample"],
         include = files.include,
-        exclude = files.exclude
-        #exclude = files.dropped_strains
-    params:
-        #min_date = "2024-01-01",
-        #query = 'region == "North America"'
-        #max_sequences = config["subsampling"]["max_sequences"]
+        exclude = files.exclude,
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
     log: "logs/{build_name}/genome/sequences_{segment}.txt"
     shell:
         """
-        augur filter \
+        augur subsample /
             --sequences {input.sequences} \
             --metadata {input.metadata} \
+            --config {input.config} \
             --output-log {log} \
             --output-sequences {output.sequences} \
             --exclude {input.exclude} \
