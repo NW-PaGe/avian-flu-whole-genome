@@ -139,34 +139,37 @@ rule tree:
             --nthreads {threads} \
             --override-default-args
         """
-
+# add following argument for bootstrapping:
 #           --tree-builder-args '-bb 1000 -bnni -czb' \
+
 def clock_rate(w):
-    assert subtype(w.build_name)=='h5n1', 'Clock rates only available for H5N1'
-    # These parameters taken from the main Snakefile
-    clock_rates_h5n1 = {
+    # Allow both H5N1 and H5N5 (or any H5Nx, really)
+    assert subtype(w.build_name) in ('h5n1', 'h5n5', 'h5n2', 'h5n3', 'h5n4', 'h5n6', 'h5n7', 'h5n8', 'h5n9'), \
+        'Clock rates only available for H5Nx'
+
+    clock_rates_h5nx = {
         'pb2': 0.00287,
         'pb1': 0.00264,
-        'pa': 0.00248,
-        'ha': 0.00455,
-        'np': 0.00252,
-        'na': 0.00349,
-        'mp': 0.00191,
-        'ns': 0.00249
+        'pa':  0.00248,
+        'ha':  0.00455,
+        'np':  0.00252,
+        'na':  0.00349,
+        'mp':  0.00191,
+        'ns':  0.00249,
     }
     lengths = {
         'pb2': 2341,
         'pb1': 2341,
-        'pa': 2233,
-        'ha': 1760,
-        'np': 1565,
-        'na': 1458,
-        'mp': 1027,
-        'ns': 865
+        'pa':  2233,
+        'ha':  1760,
+        'np':  1565,
+        'na':  1458,
+        'mp':  1027,
+        'ns':  865,
     }
-    mean = sum([cr * lengths[seg] for seg,cr in clock_rates_h5n1.items()])/sum(lengths.values())
-    stdev = mean/2
-    return f"--clock-rate {mean} --clock-std-dev {stdev}"
+    mean = sum(cr * lengths[seg] for seg, cr in clock_rates_h5nx.items()) / sum(lengths.values())
+    stdev = mean / 2
+    return f"--clock-rate {mean:.6f} --clock-std-dev {stdev:.6f}"
 
 
 rule refine:
