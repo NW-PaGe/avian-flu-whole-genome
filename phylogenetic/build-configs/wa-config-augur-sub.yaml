@@ -38,26 +38,66 @@ files:
     colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
     auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
 
-subsampling:
-    max_sequences: 100
+# This configuration file contains custom configuration parameters for the WA State avian-flu-whole-genome build
+build_name: h5n1-whole-genome
+subtype: h5n1
+strain_id_field: strain
 
+segments:
+  - pb2
+  - pb1
+  - pa
+  - ha
+  - np
+  - na
+  - mp
+  - ns
 
-builds:
-  h5n1-whole-genome:
-    subsample:
-      samples:
-          state:
-            query: division == 'Washington'
-            max_sequences: 100
-          regional:
-            query: division == ['Idaho','Oregon','British Columbia','Alaska']
-            max_sequences: 100
-          north_america:
-            query: (region == 'North America') & (division != ['Idaho','Oregon','British Columbia','Alaska'])
-            group_by: ['month', 'year']
-            max_sequences: 20
-          world:
-            query: region != 'North America'
-            group_by: ['month', 'year']
-            sequences_per_group: 2
-            max_sequences: 20
+subtype_query:
+    "h5nx/*/*": "subtype in ['h5n1', 'h5n2', 'h5n3', 'h5n4', 'h5n5', 'h5n6', 'h5n7', 'h5n8', 'h5n9']"
+    "h5n1/*/*": "subtype in ['h5n1']"
+    "h7n9/*/*": "subtype in ['h7n9']"
+    "h9n2/*/*": "subtype in ['h9n2']"
+
+output_dir: "results"
+export_prefix: "auspice/avian-flu_{build_name}.json"
+
+files:
+    reference_files: "config/reference_h5n1_{segment}.gb"
+    sequences: "test_data/fasta/{segment}_sequences.fasta"
+    metadata: "test_data/metadata/merged_metadata.tsv"
+    include: "test_data/includes.txt"
+    exclude: "test_data/excludes.txt"
+    colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
+    auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
+
+# Subsample configuration for augur subsample
+# This follows the structure expected by augur subsample --config
+custom_subsample:
+    genome:
+        defaults:
+            exclude_ambiguous_dates_by: year
+        samples:
+            state:
+                query: division == 'Washington'
+                max_sequences: 100
+                min_date: "2020-01-01"
+                exclude:
+                    - test_data/excludes.txt
+                include:
+                    - test_data/includes.txt
+            regional:
+                query: division in ['Idaho', 'Oregon', 'British Columbia', 'Alaska']
+                max_sequences: 100
+                min_date: "2020-01-01"
+                exclude:
+                    - test_data/excludes.txt
+            north_america:
+                query: region == 'North America' and division not in ['Washington', 'Idaho', 'Oregon', 'British Columbia', 'Alaska']
+                group_by:
+                    - year
+                    - month
+                max_sequences: 100
+                min_date: "2020-01-01"
+                exclude:
+                    - test_data/excludes.txt

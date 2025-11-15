@@ -62,31 +62,6 @@ rule files:
 
 files = rules.files.params
 
-#rule filter:
-#    input:
-#        sequences = files.sequences,
-#        metadata = files.metadata,
-#        include = files.include,
-#        exclude = files.exclude
-#        #exclude = files.dropped_strains
-#    params:
-#        #min_date = "2024-01-01",
-#        #query = 'region == "North America"'
-#        #max_sequences = config["subsampling"]["max_sequences"]
-#    output:
-#        sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
-#    log: "logs/{build_name}/genome/sequences_{segment}.txt"
-#    shell:
-#        """
-#        augur filter \
-#            --sequences {input.sequences} \
-#            --metadata {input.metadata} \
-#            --output-log {log} \
-#            --output-sequences {output.sequences} \
-#            --exclude {input.exclude} \
-#            --include {input.include} \
-#        """
-
 rule filter:
     """
     Filtering using augur subsample
@@ -94,23 +69,28 @@ rule filter:
     input:
         sequences = files.sequences,
         metadata = files.metadata,
-        config = "results/run_config.yaml",
-        config_section = ["builds", "h5n1-whole-genome", "subsample"],
         include = files.include,
         exclude = files.exclude,
     output:
-        sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
-    log: "logs/{build_name}/genome/sequences_{segment}.txt"
+        sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
+        metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
+    params:
+        config = "phylogenetic/build-configs/wa-config-augur-sub.yaml",
+        config_section = ["custom_subsample", "genome"],
+        strain_id = config["strain_id_field"]
+    log:
+        "logs/{build_name}/genome/sequences_{segment}.txt"
     shell:
         """
-        augur subsample /
+        augur subsample \
             --sequences {input.sequences} \
             --metadata {input.metadata} \
-            --config {input.config} \
-            --output-log {log} \
+            --metadata-id-columns {params.strain_id} \
+            --config {params.config} \
+            --config-section {params.config_section:q} \
             --output-sequences {output.sequences} \
-            --exclude {input.exclude} \
-            --include {input.include} \
+            --output-metadata {output.metadata} \
+            --output-log {log}
         """
 
 rule align:
@@ -145,35 +125,6 @@ rule join_sequences:
             --output {output.alignment}
         """
 
-#rule add_whole_genome:
-#    input:
-#        alignment = "results/{build_name}/genome/aligned.fasta",
-#        new_sequences = "ingest_files_manuscript/Franklin03.fas"
-#    output:
-#        combined_alignment = "results/{build_name}/genome/aligned_with_franklin.fasta"
-#    shell:
-#        """
-#        cat {input.alignment} {input.new_sequences} > {output.combined_alignment}
-#        """
-
-#rule realign:
-#    input:
-#        sequences = "results/{build_name}/genome/aligned_with_franklin.fasta",
-#        reference = "config/h5_cattle_genome_root.gb"
-#    output:
-#        alignment = "results/{build_name}/genome/aligned_final.fasta"
-#    threads: 8
-#    shell:
-#        """
-#        augur align \
-#            --sequences {input.sequences} \
-#            --reference-sequence {input.reference} \
-#            --output {output.alignment} \
-#            --remove-reference \
-#            --fill-gaps \
-#            --nthreads {threads}
-#        """
-
 rule join_genbank:
     input:
         genbank_files = lambda w: [f"config/reference_{subtype(w.build_name)}_{segment}.gb" for segment in SEGMENTS],
@@ -203,7 +154,6 @@ rule tree:
             --output {output.tree} \
             --method {params.method} \
             --nthreads {threads} \
-            --tree-builder-args '-bb 1000 -bnni -czb' \
             --override-default-args
         """
 
