@@ -1,30 +1,17 @@
-#include: "rules/common.smk"
+import os
 
-#SUPPORTED_LOCAL_SOURCES = ["ncbi", "andersen-lab", "joined-ncbi"]
+# Check if config was already loaded via --configfile flag
+# If config is empty, load the default
+if not config:
+    configfile: os.path.join(workflow.basedir, "phylogenetic/build-configs/wa-config-augur-sub.yaml")
 
-#if LOCAL_INGEST:
-#    assert INGEST_SOURCE in SUPPORTED_LOCAL_SOURCES, \
-#        f"Full genome build is only set up for locat ingest from {SUPPORTED_LOCAL_SOURCES}."
-#else:
-#    assert S3_SRC.startswith("s3://nextstrain-data/"), \
-#        "Full genome build is only set up for data from the public S3 bucket"
-
-#import json
-
-# -------------------- notes --------------------
-# The approach here is to align each segment and join them (and their annotations) into a genome
-# We don't join the metadata - we assume (!) all the available data is in the metadata for the HA segment
-# For rules from tree onwards there is a lot of duplication between this snakefile and the
-# per-segment snakefile. A config YAML would help abstract some of this out.
-# -----------------------------------------------
-configfile: "phylogenetic/build-configs/wa-config-augur-sub.yaml"
-
+# Store the config file path for use in rules
+CONFIG_FILE = workflow.overwrite_configfiles[0] if workflow.overwrite_configfiles else os.path.join(workflow.basedir, "phylogenetic/build-configs/wa-config-augur-sub.yaml")
 
 # Segment order determines how the full genome annotation (entropy panel) is set up
 # using the canonical ordering <https://viralzone.expasy.org/6>
 SEGMENTS = config["segments"]
 assert len(set(SEGMENTS))==len(SEGMENTS), "Duplicate segment detected - check 'SEGMENTS' list"
-
 BUILD_NAME = [config["build_name"]]
 
 # We parameterise the build by build_name, but we often refer to upstream files / sources by the subtype
@@ -44,9 +31,6 @@ def subtypes_by_subtype_wildcard(wildcards):
 rule all:
     input: expand("auspice/avian-flu_{build_name}.json", build_name=BUILD_NAME)
 
-# This must be after the `all` rule above since it depends on its inputs
-#include: "rules/deploy.smk"
-
 rule files:
     params:
         reference = lambda w: f"config/reference_{subtype(w.build_name)}_{{segment}}.gb",
@@ -54,13 +38,11 @@ rule files:
         metadata = config["files"]["metadata"],
         include = config["files"]["include"],
         exclude = config["files"]["exclude"],
-        #dropped_strains = "config/dropped_strains_{build_name}.txt",
         colors = config["files"]["colors"],
-        #lat_longs =  lambda w: f"config/lat_longs_{subtype(w.build_name)}.tsv",
         auspice_config = config["files"]["auspice_config"],
-        #description = "config/description_{build_name}.md"
 
 files = rules.files.params
+
 
 rule filter:
     """
@@ -75,7 +57,7 @@ rule filter:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
     params:
-        config = "phylogenetic/build-configs/wa-config-augur-sub.yaml",
+        config = CONFIG_FILE,  # <-- CHANGED: Use the actual config file that was loaded
         config_section = ["custom_subsample", "genome"],
         strain_id = config["strain_id_field"]
     log:
@@ -92,6 +74,7 @@ rule filter:
             --output-metadata {output.metadata} \
             --output-log {log}
         """
+
 
 rule align:
     input:
@@ -206,10 +189,7 @@ rule refine:
         date_inference = "marginal",
         clock_rate = clock_rate,
         root_method = "best"
-        # Using the closest outgroup as the root
-        # root_method = best does the same thing as least-squares
-        # Make sure this strain is force included via augur filter --include
-        #root_strain = "A/jungle_crow/Iwate/0304I001/2022_H5N1"
+
     shell:
         """
         augur refine \
