@@ -5,28 +5,70 @@ avian flu whole genome Nextstrain build
 - **Build Name**: Pacific Flyway Avian Influenza Whole Genome Build
 - **Pathogen/Strain**: Influenza A H5N1
 - **Scope**: Pacific Flyway (BC, WA, OR, ID, CA, AK)
-- **Purpose**: This repository contains the Nextstrain build for Pacific Flyway genomic surveillance of H5N1
+- **Purpose**: This repository contains the Nextstrain build for Pacific Flyway genomic surveillance of avian-flu. It allows for segment-specific and whole genome analysis.
 
 ## Table of Contents
+- [Pathogen Epidemiology](#pathogen-epidemiology)
+- [Scientific Decisions](#scientific-decisions)
 - [Getting Started](#getting-started)
   - [Data Sources & Inputs](#data-sources--inputs)
   - [Setup & Dependencies](#setup--dependencies)
     - [Installation](#installation)
     - [Clone the repository](#clone-the-repository)
-- [Run the Build with Test Data](#run-the-build-with-test-data)
-- [Repository File Structure Overview](#repository-file-structure-overview)
-- [Expected Outputs and Interpretation](#expected-outputs-and-interpretation)
-- [Scientific Decisions](#scientific-decisions)
-- [Adapting for Another State](#adapting-for-another-state)
+- [Run the Build](#run-the-build-with-test-data)
+  - [Expected Outputs](#expected-outputs)
+  - [Visualizing Results](#visualize-results)
+- [Customization for Local Adaptation](#customization-for-local-adaptation)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
+
+## Pathogen Epidemiology
+<!--
+- Overview:
+  - Pathogen type and family
+  - Key subtypes/lineages relevant to the build
+  - Mode(s) of transmission
+- Nomenclature
+- Geographic Distribution and Seasonality
+  - Summarize where the pathogen has been found globally and/or in the region
+  - Any seasonality patterns
+
+- Public health importance
+  - Why does surveillance matter for this pathogen.
+- Genomic Relevance
+  - Why are genomic data useful for this pathogen:
+    - detecting lineage shifts
+    - detecting emergence of variants
+    - outbreak investigations
+    - monitoring vaccine escape or antiviral resistance
+    - understanding transmission pathways
+
+- Additional Resources
+  - Link any additional resources that are helpful in learning about this pathogen
+  - Link Pathogen Genomic Profile if we have one created
+
+  -->
+
+## Scientific Decisions
+  - **Reference selection**:
+    - H5N1: [A/Goose/Guangdong/1/96(H5N1)](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=93838) is used as the reference because it was the first identified H5N1 subtype.
+    - H5Nx:
+    - H7N9:
+    - H9N2:
+  - **Furin cleavage site**:`scripts/annotate-ha-cleavage-site.py` is used by the rule cleavage_site to determine the sequence of amino acids at the HA cleavage site and annotate those sequences for whether they contain a furin cleavage site. This will show up on the Color By drop down as "furin cleavage motif" and be colored as present, absent, or missing data. A furin cleavage motif addition preceding the HA cleavage site may result in viral replication across a range of tissues as well as being one of the prime determinants of avian influenza virulence.
+  - **Other adjustments**:
+    - `config/includes.txt`: These sequences are always included into our sampling strategy as they are relevant to our epidemiological investigations.
+    - `config/excludes.txt`: These sequences are always excluded from our subsampling and filtering due to duplication and based on epidemiological linkage knowledge.  
 
 ## Getting Started
 This build was put together due to the need for Pacific Flyway H5N1 surveillance tool that was not previously available.
 
 Some high-level build features and capabilities are:
-- **Furin Cleavage Site Identification**: The Auspice color-by options includes two furin cleavage site labels: the furin cleavage site motifs are labeled as present, absent, or missing and the furin cleavage site sequences (the four bases preceding HA2) are labeled in the tree.
+
+  - **Flexibility in segments**: This build has the flexibility to allow for a whole genome build, as well as single segment and segment combinations based on what is specified in the build config file.
+
+  - **Furin Cleavage Site Identification**: The Auspice color-by options includes two furin cleavage site labels: the furin cleavage site motifs are labeled as present, absent, or missing and the furin cleavage site sequences (the four bases preceding HA2) are labeled in the tree.
 
 ### Data Sources & Inputs
 This build relies on publicly available data sourced from GISAID. These data have been cleaned and stored on AWS.
@@ -79,43 +121,23 @@ The file structure of the repository is as follows with `*`" folders denoting fo
 ├── phylogenetic
 ├── scripts
 ├── data
-├── example_data
-└── results*
+├── test_data
+├── results*
 ├── README.md
 └── Snakefile
 ```
-
-- `config/`: Contains the configuration .json file that defines how data should be presented in Auspice, the reference .gb file, the .tsv file to associate discrete values with colors in visualization.
-- `ingest/`:
-- `phylogenetic/`:
-- `scripts/`: Contains python scripts that are called within the Snakefile.
- - `annotate-he-cleavage-site.py`: Python script that reads in HA alignment file, pulls out the 4 amino acid sites preceding HA2 and annotates the sequences for the furin cleavage site identification.
- - `join-genbank.py`:
- - `join-segments.py`: Python script that cleans and filters the metadata file.
-- `data/`: Contains the most recent sequences and metadata to be used as input files. Contains and includes.txt and excludes.txt
-- `example_data/`: Contains a subset of sequences and metadata sourced from NCBI to be used to test this build
-- `Snakefile`: The Snakefile serves as the blueprint for defining and organizing the data processing workflow. It is a plain text file that contains a series of rules, each specifying how to transform input files into output files.
-
-<!-- - - `clade-labeling`: Currently not used in this build. -->
-
+More details on the file structure of this build can be found [here](https://github.com/NW-PaGe/avian-flu-whole-genome/wiki/_new).
 
 ## Expected Outputs and Interpretation
-Running the build with the provided fasta and metadata file in `example_data`, the runtime using a 32.0 GB computer with 4 cores should take approximately XX minutes. After successfully running the build with test data, there will be two output folders containing the build results.
+Running the build with the provided fasta and metadata file in `test_data`, the runtime using a 32.0 GB computer with 4 cores should take approximately XX minutes. After successfully running the build with test data, there will be two output folders containing the build results.
 
 
 - `auspice/` folder contains:
   - `flu_avian_h5n1_ha.json` : JSON file to be visualized in Auspice
 - `results/` folder contains:
-  - `include/`: Text files of subsampled sequences to include and a fasta file of sequences to include in build
-  - Intermediate files generated from build
-
-## Scientific Decisions
-- **Reference selection**: [A/Goose/Guangdong/1/96(H5N1)](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=93838) is used as the reference because it was the first identified H5N1 subtype.
-- **Furin cleavage site**:`scripts/annotate-ha-cleavage-site.py` is used by the rule cleavage_site to determine the sequence of amino acids at the HA cleavage site and annotate those sequences for whether they contain a furin cleavage site. This will show up on the Color By drop down as "furin cleavage motif" and be colored as present, absent, or missing data. A furin cleavage motif addition preceding the HA cleavage site may result in viral replication across a range of tissues as well as being one of the prime determinants of avian influenza virulence.
-- **Other adjustments**:
-  - `config/includes.txt`: These sequences are always included into our sampling strategy as they are relevant to our epidemiological investigations.
-  - `config/excludes.txt`: These sequences are always excluded from our subsampling and filtering due to duplication and based on epidemiological linkage knowledge.
-
+  - `HXNX-{build-resolution}/`: Folder named as the flu type (HXNX) and resolution (whole genome, segment HA. etc) specified in config file
+      - `filtered_metadata_{segment}.tsv` Text file of subsampled sequences to include
+      - `sequences_{segment}.fasta` Fasta file of sequences to include in build
 
 ## Contributing
 For any questions please submit them to our [Discussions](https://github.com/NW-PaGe/avian-flu-whole-genome/discussions) page otherwise software issues and requests can be logged as a Git [Issue](https://github.com/NW-PaGe/avian-flu-whole-genome/issues).
