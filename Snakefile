@@ -1,35 +1,22 @@
-#include: "rules/common.smk"
+import os
 
-#SUPPORTED_LOCAL_SOURCES = ["ncbi", "andersen-lab", "joined-ncbi"]
+# Check if config was already loaded via --configfile flag
+# If config is empty, load the default
+if not config:
+    configfile: os.path.join(workflow.basedir, "phylogenetic/build-configs/wa-config-augur-sub.yaml")
 
-#if LOCAL_INGEST:
-#    assert INGEST_SOURCE in SUPPORTED_LOCAL_SOURCES, \
-#        f"Full genome build is only set up for locat ingest from {SUPPORTED_LOCAL_SOURCES}."
-#else:
-#    assert S3_SRC.startswith("s3://nextstrain-data/"), \
-#        "Full genome build is only set up for data from the public S3 bucket"
-
-#import json
-
-# -------------------- notes --------------------
-# The approach here is to align each segment and join them (and their annotations) into a genome
-# We don't join the metadata - we assume (!) all the available data is in the metadata for the HA segment
-# For rules from tree onwards there is a lot of duplication between this snakefile and the
-# per-segment snakefile. A config YAML would help abstract some of this out.
-# -----------------------------------------------
-configfile: "phylogenetic/build-configs/wa-config.yaml"
-
+# Store the config file path for use in rules
+CONFIG_FILE = workflow.overwrite_configfiles[0] if workflow.overwrite_configfiles else os.path.join(workflow.basedir, "phylogenetic/build-configs/wa-config-augur-sub.yaml")
 
 # Segment order determines how the full genome annotation (entropy panel) is set up
 # using the canonical ordering <https://viralzone.expasy.org/6>
 SEGMENTS = config["segments"]
 assert len(set(SEGMENTS))==len(SEGMENTS), "Duplicate segment detected - check 'SEGMENTS' list"
-
 BUILD_NAME = [config["build_name"]]
 
 # We parameterise the build by build_name, but we often refer to upstream files / sources by the subtype
 def subtype(build_name):
-    assert build_name=='h5n1-franklin-county-whole-genome', "Full genome build for 'h5n1-franklin-county-whole-genome' "
+    assert build_name=='h5n1-whole-genome', "Full genome build for 'h5n1-whole-genome' "
     return 'h5n1'
 
 def subtypes_by_subtype_wildcard(wildcards):
@@ -44,9 +31,6 @@ def subtypes_by_subtype_wildcard(wildcards):
 rule all:
     input: expand("auspice/avian-flu_{build_name}.json", build_name=BUILD_NAME)
 
-# This must be after the `all` rule above since it depends on its inputs
-#include: "rules/deploy.smk"
-
 rule files:
     params:
         reference = lambda w: f"config/reference_{subtype(w.build_name)}_{{segment}}.gb",
@@ -54,38 +38,43 @@ rule files:
         metadata = config["files"]["metadata"],
         include = config["files"]["include"],
         exclude = config["files"]["exclude"],
-        #dropped_strains = "config/dropped_strains_{build_name}.txt",
         colors = config["files"]["colors"],
-        #lat_longs =  lambda w: f"config/lat_longs_{subtype(w.build_name)}.tsv",
         auspice_config = config["files"]["auspice_config"],
-        #description = "config/description_{build_name}.md"
 
 files = rules.files.params
 
+
 rule filter:
+    """
+    Filtering using augur subsample
+    """
     input:
         sequences = files.sequences,
         metadata = files.metadata,
         include = files.include,
-        exclude = files.exclude
-        #exclude = files.dropped_strains
-    params:
-        #min_date = "2024-01-01",
-        #query = 'region == "North America"'
-        #max_sequences = config["subsampling"]["max_sequences"]
+        exclude = files.exclude,
     output:
-        sequences = "results/{build_name}/genome/sequences_{segment}.fasta"
-    log: "logs/{build_name}/genome/sequences_{segment}.txt"
+        sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
+        metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
+    params:
+        config = CONFIG_FILE,  # <-- CHANGED: Use the actual config file that was loaded
+        config_section = ["custom_subsample", "genome"],
+        strain_id = config["strain_id_field"]
+    log:
+        "logs/{build_name}/genome/sequences_{segment}.txt"
     shell:
         """
-        augur filter \
+        augur subsample \
             --sequences {input.sequences} \
             --metadata {input.metadata} \
-            --output-log {log} \
+            --metadata-id-columns {params.strain_id} \
+            --config {params.config} \
+            --config-section {params.config_section:q} \
             --output-sequences {output.sequences} \
-            --exclude {input.exclude} \
-            --include {input.include} \
+            --output-metadata {output.metadata} \
+            --output-log {log}
         """
+
 
 rule align:
     input:
@@ -119,35 +108,6 @@ rule join_sequences:
             --output {output.alignment}
         """
 
-#rule add_whole_genome:
-#    input:
-#        alignment = "results/{build_name}/genome/aligned.fasta",
-#        new_sequences = "ingest_files_manuscript/Franklin03.fas"
-#    output:
-#        combined_alignment = "results/{build_name}/genome/aligned_with_franklin.fasta"
-#    shell:
-#        """
-#        cat {input.alignment} {input.new_sequences} > {output.combined_alignment}
-#        """
-
-#rule realign:
-#    input:
-#        sequences = "results/{build_name}/genome/aligned_with_franklin.fasta",
-#        reference = "config/h5_cattle_genome_root.gb"
-#    output:
-#        alignment = "results/{build_name}/genome/aligned_final.fasta"
-#    threads: 8
-#    shell:
-#        """
-#        augur align \
-#            --sequences {input.sequences} \
-#            --reference-sequence {input.reference} \
-#            --output {output.alignment} \
-#            --remove-reference \
-#            --fill-gaps \
-#            --nthreads {threads}
-#        """
-
 rule join_genbank:
     input:
         genbank_files = lambda w: [f"config/reference_{subtype(w.build_name)}_{segment}.gb" for segment in SEGMENTS],
@@ -177,37 +137,39 @@ rule tree:
             --output {output.tree} \
             --method {params.method} \
             --nthreads {threads} \
-            --tree-builder-args '-bb 1000 -bnni -czb' \
             --override-default-args
         """
-
+# add following argument for bootstrapping:
 #           --tree-builder-args '-bb 1000 -bnni -czb' \
+
 def clock_rate(w):
-    assert subtype(w.build_name)=='h5n1', 'Clock rates only available for H5N1'
-    # These parameters taken from the main Snakefile
-    clock_rates_h5n1 = {
+    # Allow both H5N1 and H5N5 (or any H5Nx, really)
+    assert subtype(w.build_name) in ('h5n1', 'h5n5', 'h5n2', 'h5n3', 'h5n4', 'h5n6', 'h5n7', 'h5n8', 'h5n9'), \
+        'Clock rates only available for H5Nx'
+
+    clock_rates_h5nx = {
         'pb2': 0.00287,
         'pb1': 0.00264,
-        'pa': 0.00248,
-        'ha': 0.00455,
-        'np': 0.00252,
-        'na': 0.00349,
-        'mp': 0.00191,
-        'ns': 0.00249
+        'pa':  0.00248,
+        'ha':  0.00455,
+        'np':  0.00252,
+        'na':  0.00349,
+        'mp':  0.00191,
+        'ns':  0.00249,
     }
     lengths = {
         'pb2': 2341,
         'pb1': 2341,
-        'pa': 2233,
-        'ha': 1760,
-        'np': 1565,
-        'na': 1458,
-        'mp': 1027,
-        'ns': 865
+        'pa':  2233,
+        'ha':  1760,
+        'np':  1565,
+        'na':  1458,
+        'mp':  1027,
+        'ns':  865,
     }
-    mean = sum([cr * lengths[seg] for seg,cr in clock_rates_h5n1.items()])/sum(lengths.values())
-    stdev = mean/2
-    return f"--clock-rate {mean} --clock-std-dev {stdev}"
+    mean = sum(cr * lengths[seg] for seg, cr in clock_rates_h5nx.items()) / sum(lengths.values())
+    stdev = mean / 2
+    return f"--clock-rate {mean:.6f} --clock-std-dev {stdev:.6f}"
 
 
 rule refine:
@@ -230,10 +192,7 @@ rule refine:
         date_inference = "marginal",
         clock_rate = clock_rate,
         root_method = "best"
-        # Using the closest outgroup as the root
-        # root_method = best does the same thing as least-squares
-        # Make sure this strain is force included via augur filter --include
-        #root_strain = "A/jungle_crow/Iwate/0304I001/2022_H5N1"
+
     shell:
         """
         augur refine \
