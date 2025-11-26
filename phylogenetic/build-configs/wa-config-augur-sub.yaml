@@ -30,13 +30,13 @@ output_dir: "results"
 export_prefix: "auspice/avian-flu_{build_name}.json"
 
 files:
-    reference_files: "config/reference_h5n1_{segment}.gb"
+    reference_files: "config/h5n1/reference_h5n1_{segment}.gb"
     sequences: "test_data/fasta/{segment}_sequences.fasta"
     metadata: "test_data/metadata/merged_metadata.tsv"
     include: "test_data/includes.txt"
     exclude: "test_data/excludes.txt"
-    colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
-    auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
+    colors: "config/h5n1/colors_h5n1-franklin-county-outbreak.tsv"
+    auspice_config: "config/h5n1/auspice_config_h5n1-franklin-county-outbreak.json"
 
 # This configuration file contains custom configuration parameters for the WA State avian-flu-whole-genome build
 build_name: h5n1-whole-genome
@@ -63,13 +63,13 @@ output_dir: "results"
 export_prefix: "auspice/avian-flu_{build_name}.json"
 
 files:
-    reference_files: "config/reference_h5n1_{segment}.gb"
+    reference_files: "config/h5n1/reference_h5n1_{segment}.gb"
     sequences: "test_data/fasta/{segment}_sequences.fasta"
     metadata: "test_data/metadata/merged_metadata.tsv"
     include: "test_data/includes.txt"
     exclude: "test_data/excludes.txt"
-    colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
-    auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
+    colors: "config/h5n1/colors_h5n1-franklin-county-outbreak.tsv"
+    auspice_config: "config/h5n1/auspice_config_h5n1-franklin-county-outbreak.json"
 
 # Subsample configuration for augur subsample
 # This follows the structure expected by augur subsample --config

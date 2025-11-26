@@ -1,88 +1,94 @@
-#This configuration file contains custom configuration parameters for the WA State avian-flue-whole-genome build
-build_name: h5n1-whole-genome
-subtype: h5n1
-segments:
-  - pb2
-  - pb1
-  - pa
-  - ha
-  - np
-  - na
-  - mp
-  - ns
-
-subtype_query:
-    "h5nx/*/*": "subtype in ['h5n1', 'h5n2', 'h5n3', 'h5n4', 'h5n5', 'h5n6', 'h5n7', 'h5n8', 'h5n9']"
-    "h5n1/*/*": "subtype in ['h5n1']"
-    "h7n9/*/*": "subtype in ['h7n9']"
-    "h9n2/*/*": "subtype in ['h9n2']"
-
-#reference_files: "config/reference_h5n1_{segment}.gb"
-#sequence_files: "test_data/fasta/{segment}_sequences.fasta"
-#metadata: "test_data/metadata/merged_metadata.tsv"
-#include: "ingest_files_manuscript/includes.txt"
-#exclude: "ingest_files_manuscript/excludes.txt"
-#colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
-#auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
-#new_sequences: "ingest_files_manuscript/Franklin03.fas"
-realign_reference: "config/h5_cattle_genome_root.gb"
-output_dir: "results"
-export_prefix: "auspice/avian-flu_{build_name}.json"
-
-files:
-    reference_files: "config/reference_h5n1_{segment}.gb"
-    sequences: "test_data/fasta/{segment}_sequences.fasta"
-    metadata: "test_data/metadata/merged_metadata.tsv"
-    include: "test_data/includes.txt"
-    exclude: "test_data/excludes.txt"
-    colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
-    auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
-
-# This configuration file contains custom configuration parameters for the WA State avian-flu-whole-genome build
-build_name: h5n1-whole-genome
-subtype: h5n1
+# Configuration file supporting multiple builds with flexible segment configurations
+# Global settings that apply to all builds
+# Specify the column name for the field in your metadata file that contains the unique
+# ID for each sequence. This is used by augur subsample to match sequences to their metadata
 strain_id_field: strain
 
-segments:
-  - pb2
-  - pb1
-  - pa
-  - ha
-  - np
-  - na
-  - mp
-  - ns
+# Define multiple builds
+builds:
+  # Build 1: HA segment only
+  # Output: auspice/h5n1-ha-only.json
+  h5n1-ha-only:
+    subtype: h5n1
+    segments:
+      - ha
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "test_data/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/metadata/merged_metadata.tsv"
+      include: "test_data/includes.txt"
+      exclude: "test_data/excludes.txt"
+      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+    subsample:
+      defaults:
+        exclude_ambiguous_dates_by: year
+      samples:
+        state:
+          query: division == 'Washington'
+          max_sequences: 100
+          min_date: "2020-01-01"
 
-subtype_query:
-    "h5nx/*/*": "subtype in ['h5n1', 'h5n2', 'h5n3', 'h5n4', 'h5n5', 'h5n6', 'h5n7', 'h5n8', 'h5n9']"
-    "h5n1/*/*": "subtype in ['h5n1']"
-    "h7n9/*/*": "subtype in ['h7n9']"
-    "h9n2/*/*": "subtype in ['h9n2']"
+  # Build 2: NA only
+  # Output: auspice/h5n1_na_only.json
+  h5n1_na_only:
+    subtype: h5n1
+    segments:
+      - na
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "test_data/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/metadata/merged_metadata.tsv"
+      include: "test_data/includes.txt"
+      exclude: "test_data/excludes.txt"
+      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+    subsample:
+      defaults:
+        exclude_ambiguous_dates_by: year
+      samples:
+        pacific_northwest:
+          query: division in ['Washington', 'Oregon', 'Idaho']
+          max_sequences: 300
+          min_date: "2020-01-01"
 
-output_dir: "results"
-export_prefix: "auspice/avian-flu_{build_name}.json"
-
-files:
-    reference_files: "config/reference_h5n1_{segment}.gb"
-    sequences: "test_data/fasta/{segment}_sequences.fasta"
-    metadata: "test_data/metadata/merged_metadata.tsv"
-    include: "test_data/includes.txt"
-    exclude: "test_data/excludes.txt"
-    colors: "config/colors_h5n1-franklin-county-outbreak.tsv"
-    auspice_config: "config/auspice_config_h5n1-franklin-county-outbreak.json"
-
-# Subsample configuration for augur subsample
-# This follows the structure expected by augur subsample --config
-custom_subsample:
-    genome:
-        defaults:
-            exclude_ambiguous_dates_by: year
-        samples:
-            state:
-                query: division == 'Washington'
-                max_sequences: 100
-                min_date: "2020-01-01"
-                exclude:
-                    - test_data/excludes.txt
-                include:
-                    - test_data/includes.txt
+  # Build 3: Whole genome (all 8 segments)
+  # Output: auspice/h5n1-whole-genome.json
+  h5n1-whole-genome:
+    subtype: h5n1
+    segments:
+      - pb2
+      - pb1
+      - pa
+      - ha
+      - np
+      - na
+      - mp
+      - ns
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "test_data/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/metadata/merged_metadata.tsv"
+      include: "test_data/includes.txt"
+      exclude: "test_data/excludes.txt"
+      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+    subsample:
+      defaults:
+        exclude_ambiguous_dates_by: year
+      samples:
+        # Primary focus: Pacific Northwest
+        pacific_northwest:
+          query: division in ['Washington', 'Oregon', 'Idaho']
+          max_sequences: 250
+          min_date: "2020-01-01"
+        # Context: Other western states
+        western_context:
+          query: division in ['California', 'Nevada', 'Montana', 'Wyoming']
+          max_sequences: 1000
+          min_date: "2020-01-01"
+        # Broader context: Rest of USA
+        national_context:
+          query: country == 'USA' and division not in ['Washington', 'Oregon', 'Idaho', 'California', 'Nevada', 'Montana', 'Wyoming']
+          max_sequences: 1000
+          min_date: "2020-01-01"
