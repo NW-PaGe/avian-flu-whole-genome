@@ -23,11 +23,14 @@ def get_segments(wildcards):
     return config["builds"][wildcards.build_name]["segments"]
 
 def should_concatenate(wildcards):
-    """Check if segments should be concatenated for this build"""
     build_conf = config["builds"][wildcards.build_name]
-    # If only one segment, no concatenation needed
-    if len(build_conf["segments"]) == 1:
+    segments = build_conf["segments"]
+
+    # Single segment - never concatenate
+    if len(segments) == 1:
         return False
+
+    # Multiple segments - default to concatenate unless explicitly disabled
     return build_conf.get("concatenate", True)
 
 def subtype(build_name):

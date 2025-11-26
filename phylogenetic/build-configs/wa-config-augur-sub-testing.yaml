@@ -12,7 +12,6 @@ builds:
     subtype: h5n1
     segments:
       - ha
-    concatenate: false  # Single segment, no concatenation needed
     files:
       reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
       sequences: "test_data/fasta/{segment}_sequences.fasta"
@@ -36,7 +35,6 @@ builds:
     subtype: h5n1
     segments:
       - na
-    concatenate: false  # Single segment, no concatenation needed
     files:
       reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
       sequences: "test_data/fasta/{segment}_sequences.fasta"
@@ -67,7 +65,6 @@ builds:
       - na
       - mp
       - ns
-    concatenate: true  # Concatenate in specified order (canonical ordering)
     files:
       reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
       sequences: "test_data/fasta/{segment}_sequences.fasta"
