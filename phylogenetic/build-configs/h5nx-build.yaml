@@ -19,8 +19,6 @@ builds:
       reference_files: "config/{subtype}/reference_{subtype}_{segment}.gb"
       sequences: "test_data/h5nx/fasta/{segment}_sequences.fasta"
       metadata: "test_data/h5nx/metadata/metadata_merged_final.tsv"
-      include: "test_data/h5nx/includes.txt"
-      exclude: "test_data/h5nx/excludes.txt"
       colors: "config/{subtype}/colors_h5nx-outbreak.tsv"
       auspice_config: "config/{subtype}/auspice_config_h5nx-outbreak.json"
     subsample:

@@ -66,8 +66,8 @@ rule filter:
     input:
         sequences = lambda w: get_build_files(w, "sequences"),
         metadata = lambda w: get_build_files(w, "metadata"),
-        include = lambda w: get_build_files(w, "include"),
-        exclude = lambda w: get_build_files(w, "exclude"),
+        #include = lambda w: get_build_files(w, "include"),
+        #exclude = lambda w: get_build_files(w, "exclude"),
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
