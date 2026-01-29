@@ -1,0 +1,33 @@
+strain_id_field: strain
+
+# Define multiple builds
+builds:
+  # Whole genome (all 8 segments)
+  # Output: auspice/h5n5-whole-genome.json
+  h5n5-whole-genome:
+    subtype: h5nx
+    segments:
+      - pb2
+      - pb1
+      - pa
+      - ha
+      - np
+      - na
+      - mp
+      - ns
+    files:
+      reference_files: "config/{subtype}/reference_{subtype}_{segment}.gb"
+      sequences: "test_data/h5nx/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/h5nx/metadata/metadata_merged_final.tsv"
+      include: "test_data/h5nx/includes.txt"
+      exclude: "test_data/h5nx/excludes.txt"
+      colors: "config/{subtype}/colors_h5nx-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5nx-outbreak.json"
+    subsample:
+      defaults:
+        include:
+          - test_data/h5nx/includes.txt
+        exclude:
+          - test_data/h5nx/excludes.txt
+      samples: 
+        all: {}
