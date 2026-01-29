@@ -3,8 +3,8 @@ strain_id_field: strain
 # Define multiple builds
 builds:
   # Build 1: HA and NA segments
-  # Output: auspice/h5n1-ha-only.json
-  h5n1-ha-only:
+  # Output: auspice/h5n1-ha-na-only.json
+  h5n1-ha-na-only:
     subtype: h5n1
     segments:
       - ha
