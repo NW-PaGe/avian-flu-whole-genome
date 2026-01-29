@@ -4,7 +4,7 @@ strain_id_field: strain
 builds:
   # Build 1: HA and NA segments
   # Output: auspice/h5n1-ha-only.json
-  h5n1-ha-only:
+  h5n1-ha-na-only:
     subtype: h5n1
     segments:
       - ha
