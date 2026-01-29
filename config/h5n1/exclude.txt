@@ -1,1 +1,27 @@
-#sequences to exclude
+A/Washington/240/2024
+A/Iowa/124/2024
+A/chicken/Washington/24-030039-001/2024
+A/chicken/Washington/24-030039-002/2024
+A/chicken/Washington/22-017871-001-original/2022
+
+#These two sequences have collection dates of 1923
+A/quail/Vietnam/NCVD-23AS358/2023
+A/poultry/Vietnam/NCVD-23AS454/2023
+
+#outgrouping entire build - from 2009 to 2024
+A/dairy_cow/Idaho/014338-001/2005
+A/dairycow/Idaho/014338-001/2005
+A/whooper_swan/Arkhangai/Ark1/2009
+A/whooperswan/Arkhangai/Ark1/2009
+A/duck/Vietnam/NCVD14-A484/2014
+A/duck/Vietnam/NCVD14-A449/2014
+A/chicken/Laos/201/2014
+
+#outgrouping entire build in a weird way
+
+A/mallardduck/Ohio/24OS0669/2024
+A/mallardduck/Ohio/24OS0668/2024
+
+
+
+

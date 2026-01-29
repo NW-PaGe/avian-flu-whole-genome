@@ -1,0 +1,79 @@
+# Configuration file supporting multiple builds with flexible segment configurations
+# Global settings that apply to all builds
+# Specify the column name for the field in your metadata file that contains the unique
+# ID for each sequence. This is used by augur subsample to match sequences to their metadata
+strain_id_field: strain
+
+# Define multiple builds
+builds:
+  # Build 1: HA segment only
+  # Output: auspice/h5n1-ha-only.json
+  h5n1-ha-only:
+    subtype: h5n1
+    segments:
+      - ha
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "gisaid_data/fasta/{segment}_sequences.fasta"
+      metadata: "gisaid_data/metadata/metadata.tsv"
+      include: "config/h5n1/include.txt"
+      exclude: "config/h5n1/exclude.txt"
+      colors: "config/{subtype}/colors.tsv"
+      auspice_config: "config/{subtype}/auspice_config_gisaid.json"
+    subsample:
+      defaults:
+        exclude_ambiguous_dates_by: year
+      samples:
+
+        #Washington sampling
+        state:
+          query: division == 'Washington'
+          min_date: 2000
+          min_length: 1600
+          exclude: "config/h5n1/exclude.txt"
+          include: "config/h5n1/include.txt"
+
+        # Regional context
+        regional_context:
+          query: division == ['Idaho','Oregon','British Columbia','Alaska']
+          group_by: ['month','year','region']
+          sequences_per_group: 400
+          #subsample-max-sequences: 400
+          #max_sequences: 1000
+          min_date: 2000
+          min_length: 1600
+          exclude: "config/h5n1/exclude.txt"
+          include: "config/h5n1/include.txt"
+
+        # Broader context: The rest of USA
+        national_context:
+          query: (region == 'North America') & (division not in ['Washington']) # (division not in ['Washington','Idaho','Oregon','British Columbia','Alaska'])
+          group_by: ['month','year']
+          sequences_per_group: 20
+          #max_sequences: 1000
+          min_date: 2000
+          min_length: 1600
+          exclude: "config/h5n1/exclude.txt"
+          include: "config/h5n1/include.txt"
+
+        # World context
+        world_context:
+          query: region not in ['North America']
+          group_by: ['month','year']
+          sequences_per_group: 2
+          #max_sequences: 100
+          min_date: 2000
+          min_length: 1600
+          exclude: "config/h5n1/exclude.txt"
+          include: "config/h5n1/include.txt"
+
+        # Asia context
+        asia_context:
+          query: region == 'Asia'
+          group_by: ['month','year']
+          sequences_per_group: 2
+          #max_sequences: 100
+          min_date: 2000
+          min_length: 1600
+          exclude: "config/h5n1/exclude.txt"
+          include: "config/h5n1/include.txt"

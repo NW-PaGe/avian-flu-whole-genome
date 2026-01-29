@@ -277,6 +277,7 @@ rule refine:
         coalescent = "const",
         date_inference = "marginal",
         clock_rate = clock_rate,
+        clock_filter_iqd = 4,
         root_method = "best",
         strain_id = lambda w: config.get("strain_id_field", "strain")
 
@@ -295,7 +296,8 @@ rule refine:
             --coalescent {params.coalescent} \
             --date-confidence \
             --date-inference {params.date_inference} \
-            {params.clock_rate}
+            {params.clock_rate} \
+            --clock-filter-iqd {params.clock_filter_iqd}
         """
 
 
