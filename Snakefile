@@ -219,8 +219,16 @@ rule tree:
 
 def clock_rate(w):
     """
-    Calculate clock rate based on segments in the build
+    Calculate clock rate based on segments in the build.
+    Returns empty string if use_fixed_clock is False, allowing augur to estimate rate from data.
     """
+    build_conf = config["builds"][w.build_name]
+    
+    # Check if we should use fixed clock
+    if not build_conf.get("use_fixed_clock", True):
+        return ""  # Let augur estimate rate from data
+    
+    # Calculate fixed rate for builds that specify use_fixed_clock: true
     st = subtype(w.build_name)
     # Allow H5Nx subtypes (individual subtypes and the h5nx grouping)
     allowed_subtypes = ('h5nx', 'h5n1', 'h5n2', 'h5n3', 'h5n4', 'h5n5', 'h5n6', 'h5n7', 'h5n8', 'h5n9')
@@ -256,7 +264,6 @@ def clock_rate(w):
     mean = sum(clock_rates_h5nx[seg] * lengths[seg] for seg in segments) / total_length
     stdev = mean / 2
     return f"--clock-rate {mean:.6f} --clock-std-dev {stdev:.6f}"
-
 
 rule refine:
     message:
