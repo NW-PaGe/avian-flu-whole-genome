@@ -17,13 +17,14 @@ builds:
       exclude: "test_data/ha-na/excludes.txt"
       colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
       auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
-    subsample: 
+    subsample:
+      defaults:
+        include:
+          - test_data/ha-na/includes.txt
+        exclude:
+          - test_data/ha-na/excludes.txt
       samples: 
-        all:
-          include: 
-            - test_data/ha-na/includes.txt
-          exclude:
-            - test_data/ha-na/excludes.txt
+        all: {}
 
   # Build 2: Whole genome (all 8 segments)
   # Output: auspice/h5n1-whole-genome.json
@@ -46,10 +47,11 @@ builds:
       exclude: "test_data/whole-genome/excludes.txt"
       colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
       auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
-    subsample: 
+    subsample:
+      defaults:
+        include:
+          - test_data/whole-genome/includes.txt
+        exclude:
+          - test_data/whole-genome/excludes.txt
       samples: 
-        all:
-          include: 
-            - test_data/whole-genome/includes.txt
-          exclude: 
-            - test_data/whole-genome/excludes.txt
+        all: {}
