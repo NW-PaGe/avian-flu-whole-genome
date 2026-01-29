@@ -1,0 +1,51 @@
+# Configuration file supporting multiple builds with flexible segment configurations
+# Global settings that apply to all builds
+# Specify the column name for the field in your metadata file that contains the unique
+# ID for each sequence. This is used by augur subsample to match sequences to their metadata
+strain_id_field: strain
+
+# Define multiple builds
+builds:
+  # Build 1: HA segment only
+  # Output: auspice/h5n1-ha-only.json
+  h5n1-ha-only:
+    subtype: h5n1
+    segments:
+      - ha
+      - na
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "test_data/ha-na/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/ha-na/metadata/ha_na_metadata.tsv"
+      include: "test_data/ha-na/includes.txt"
+      exclude: "test_data/ha-na/excludes.txt"
+      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+    subsample: 
+        samples: 
+            all: {}
+
+  # Build 2: Whole genome (all 8 segments)
+  # Output: auspice/h5n1-whole-genome.json
+  h5n1-whole-genome:
+    subtype: h5n1
+    segments:
+      - pb2
+      - pb1
+      - pa
+      - ha
+      - np
+      - na
+      - mp
+      - ns
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "test_data/whole-genome/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/whole-genome/metadata/merged_metadata.tsv"
+      include: "test_data/whole-genome/includes.txt"
+      exclude: "test_data/whole-genome/excludes.txt"
+      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+    subsample: 
+        samples: 
+            all: {}

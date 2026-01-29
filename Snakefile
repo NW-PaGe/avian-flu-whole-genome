@@ -83,13 +83,12 @@ rule filter:
             --sequences {input.sequences} \
             --metadata {input.metadata} \
             --metadata-id-columns {params.strain_id} \
-            --config {params.config} \
+            --config "{params.config}" \
             --config-section {params.config_section:q} \
             --output-sequences {output.sequences} \
             --output-metadata {output.metadata} \
             --output-log {log}
         """
-
 
 rule align:
     input:
@@ -141,11 +140,11 @@ rule prepare_alignment:
             shell("""
                 python scripts/join-segments.py \
                     --segments {input.alignment} \
-                    --output {output.alignment}
+                    --output "{output.alignment}"
             """)
         else:
             # Single segment - just copy/symlink
-            shell("cp {input.alignment} {output.alignment}")
+            shell('cp "{input.alignment}" "{output.alignment}"')
 
 
 def get_genbank_input(wildcards):
@@ -172,7 +171,6 @@ def get_genbank_input(wildcards):
 
     return genbank_files
 
-
 rule prepare_genbank:
     """
     Either concatenate multiple segment genbank files or copy single segment
@@ -189,11 +187,11 @@ rule prepare_genbank:
             shell("""
                 python scripts/join-genbank.py \
                     --genbank {input.genbank_files} \
-                    --output {output.genbank}
+                    --output "{output.genbank}"
             """)
         else:
             # Single segment - just copy
-            shell("cp {input.genbank_files} {output.genbank}")
+            shell('cp "{input.genbank_files}" "{output.genbank}"')
 
 
 rule tree:
@@ -381,15 +379,15 @@ rule cleavage_site:
         if input.ha_alignment:
             shell("""
                 python scripts/annotate-ha-cleavage-site.py \
-                    --alignment {input.ha_alignment} \
-                    --furin_site_motif {output.cleavage_site_annotations} \
-                    --cleavage_site_sequence {output.cleavage_site_sequences}
+                    --alignment "{input.ha_alignment}" \
+                    --furin_site_motif "{output.cleavage_site_annotations}" \
+                    --cleavage_site_sequence "{output.cleavage_site_sequences}"
             """)
         else:
             # Create empty JSON files for builds without HA
             shell("""
-                echo '{{}}' > {output.cleavage_site_annotations}
-                echo '{{}}' > {output.cleavage_site_sequences}
+                echo '{{}}' > "{output.cleavage_site_annotations}"
+                echo '{{}}' > "{output.cleavage_site_sequences}"
             """)
 
 
