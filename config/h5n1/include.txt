@@ -1,1 +1,18 @@
 #sequences to include
+
+A/tiger/USA/038000-001/2024
+A/tiger/USA/038158-001/2024
+A/tiger/USA/038158-002/2024
+A/tiger/USA/038268-001/2024
+A/tiger/USA/24-036321-001/2024
+
+#including 8 WA human sequences
+
+A/Washington/UW32495/2024
+A/Washington/239/2024
+A/Washington/247/2024
+A/Washington/254/2024
+A/Washington/255/2024
+A/Washington/253/2024
+A/Washington/252/2024
+A/Washington/251/2024
