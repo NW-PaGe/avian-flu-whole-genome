@@ -16,13 +16,13 @@ builds:
       reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
       sequences: "gisaid_data/fasta/{segment}_sequences.fasta"
       metadata: "gisaid_data/metadata/metadata.tsv"
-      include: "config/h5n1/include.txt"
-      exclude: "config/h5n1/exclude.txt"
       colors: "config/{subtype}/colors.tsv"
       auspice_config: "config/{subtype}/auspice_config_gisaid.json"
     subsample:
       defaults:
         exclude_ambiguous_dates_by: year
+        exclude: "config/h5n1/exclude.txt"
+        include: "config/h5n1/include.txt"
       samples:
 
         #Washington sampling
@@ -30,8 +30,6 @@ builds:
           query: division == 'Washington'
           min_date: 2000
           min_length: 1600
-          exclude: "config/h5n1/exclude.txt"
-          include: "config/h5n1/include.txt"
 
         # Regional context
         regional_context:
@@ -42,19 +40,15 @@ builds:
           #max_sequences: 1000
           min_date: 2000
           min_length: 1600
-          exclude: "config/h5n1/exclude.txt"
-          include: "config/h5n1/include.txt"
 
         # Broader context: The rest of USA
         national_context:
-          query: (region == 'North America') & (division not in ['Washington']) # (division not in ['Washington','Idaho','Oregon','British Columbia','Alaska'])
+          query: (region == 'North America') & (division not in ['Washington','Idaho','Oregon','British Columbia','Alaska']) #(division not in ['Washington'])
           group_by: ['month','year']
           sequences_per_group: 20
           #max_sequences: 1000
           min_date: 2000
           min_length: 1600
-          exclude: "config/h5n1/exclude.txt"
-          include: "config/h5n1/include.txt"
 
         # World context
         world_context:
@@ -64,8 +58,6 @@ builds:
           #max_sequences: 100
           min_date: 2000
           min_length: 1600
-          exclude: "config/h5n1/exclude.txt"
-          include: "config/h5n1/include.txt"
 
         # Asia context
         asia_context:
@@ -75,5 +67,3 @@ builds:
           #max_sequences: 100
           min_date: 2000
           min_length: 1600
-          exclude: "config/h5n1/exclude.txt"
-          include: "config/h5n1/include.txt"
