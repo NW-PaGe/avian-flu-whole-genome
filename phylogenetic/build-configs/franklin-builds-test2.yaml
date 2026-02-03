@@ -1,0 +1,53 @@
+strain_id_field: strain
+
+# Define multiple builds
+builds:
+  # Build 1: HA and NA segments
+  # Output: auspice/h5n1-ha-na-only.json
+  h5n1-ha-na-only:
+    subtype: h5n1
+    segments:
+      - ha
+      - na
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "test_data/ha-na/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/ha-na/metadata/ha_na_metadata.tsv"
+      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+    subsample:
+      defaults:
+        include:
+          - test_data/ha-na/includes.txt
+        exclude:
+          - test_data/ha-na/excludes.txt
+      samples: 
+        all: {}
+
+  # Build 2: Whole genome (all 8 segments)
+  # Output: auspice/h5n1-whole-genome.json
+  h5n1-whole-genome:
+    subtype: h5n1
+    segments:
+      - pb2
+      - pb1
+      - pa
+      - ha
+      - np
+      - na
+      - mp
+      - ns
+    files:
+      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
+      sequences: "test_data/whole-genome/fasta/{segment}_sequences.fasta"
+      metadata: "test_data/whole-genome/metadata/merged_metadata.tsv"
+      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
+      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+    subsample:
+      defaults:
+        include:
+          - test_data/whole-genome/includes.txt
+        exclude:
+          - test_data/whole-genome/excludes.txt
+      samples: 
+        all: {}
