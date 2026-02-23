@@ -59,6 +59,62 @@ def get_build_files(wildcards, file_key):
 
     return file_path
 
+# Biological defaults for segment QC — these are standard lengths
+DEFAULT_SEGMENT_PARAMS = {
+    'pb2': {'min_length': 2100},
+    'pb1': {'min_length': 2100},
+    'pa':  {'min_length': 2000},
+    'ha':  {'min_length': 1580},
+    'np':  {'min_length': 1400},
+    'na':  {'min_length': 1310},
+    'mp':  {'min_length': 920},
+    'ns':  {'min_length': 770},
+}
+
+def get_segment_params(wildcards):
+    """
+    Build CLI flags for segment-specific augur subsample parameters.
+    
+    Segment defaults apply unless the param is already in samples sections.
+    per_segment overrides always take highest priority.
+    """
+    build_conf = config["builds"][wildcards.build_name]
+    segment = wildcards.segment
+    subsample_conf = build_conf.get("subsample", {})
+    
+    # Collect params already specified in samples
+    params_in_samples = set()
+    for sample_name, sample_conf in subsample_conf.get("samples", {}).items():
+        if sample_conf:
+            params_in_samples.update(sample_conf.keys())
+    
+    # Apply segment defaults only for params not in samples
+    merged_params = {}
+    for param, value in DEFAULT_SEGMENT_PARAMS.get(segment, {}).items():
+        if param not in params_in_samples:
+            merged_params[param] = value
+    
+    # per_segment overrides always win
+    per_segment = subsample_conf.get("per_segment", {})
+    user_params = per_segment.get(segment, {})
+    merged_params.update(user_params)
+    
+    # Build flags
+    flags = []
+    for param, value in merged_params.items():
+        flag_name = param.replace("_", "-")
+        if isinstance(value, bool):
+            if value:
+                flags.append(f"--{flag_name}")
+        elif isinstance(value, list):
+            values_str = " ".join(str(v) for v in value)
+            flags.append(f"--{flag_name} {values_str}")
+        else:
+            flags.append(f"--{flag_name} {value}")
+    
+    return " ".join(flags)
+
+
 rule filter:
     """
     Filtering using augur subsample
@@ -66,15 +122,14 @@ rule filter:
     input:
         sequences = lambda w: get_build_files(w, "sequences"),
         metadata = lambda w: get_build_files(w, "metadata"),
-        #include = lambda w: get_build_files(w, "include"),
-        #exclude = lambda w: get_build_files(w, "exclude"),
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
     params:
         config = CONFIG_FILE,
         config_section = lambda w: ["builds", w.build_name, "subsample"],
-        strain_id = lambda w: config.get("strain_id_field", "strain")
+        strain_id = lambda w: config.get("strain_id_field", "strain"),
+        segment_params = get_segment_params
     log:
         "logs/{build_name}/genome/sequences_{segment}.txt"
     shell:
@@ -85,6 +140,7 @@ rule filter:
             --metadata-id-columns {params.strain_id} \
             --config "{params.config}" \
             --config-section {params.config_section:q} \
+            {params.segment_params} \
             --output-sequences {output.sequences} \
             --output-metadata {output.metadata} \
             --output-log {log}
