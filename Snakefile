@@ -59,15 +59,30 @@ def get_build_files(wildcards, file_key):
 
     return file_path
 
+
+rule process_metadata:
+    message:
+        """
+        Processing metadata from XLSX to TSV
+        """
+    input:
+        raw_metadata = lambda w: get_build_files(w, "metadata"),
+    output:
+        cleaned_metadata = "results/{build_name}/genome/metadata.tsv"
+    shell:
+        """
+        python scripts/process_metadata.py \
+            --input {input.raw_metadata} \
+            --output {output.cleaned_metadata}
+        """
+
 rule filter:
     """
     Filtering using augur subsample
     """
     input:
         sequences = lambda w: get_build_files(w, "sequences"),
-        metadata = lambda w: get_build_files(w, "metadata"),
-        #include = lambda w: get_build_files(w, "include"),
-        #exclude = lambda w: get_build_files(w, "exclude"),
+        metadata = "results/{build_name}/genome/metadata.tsv",
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
@@ -221,11 +236,11 @@ def clock_rate(w):
     Returns empty string if use_fixed_clock is False, allowing augur to estimate rate from data.
     """
     build_conf = config["builds"][w.build_name]
-    
+
     # Check if we should use fixed clock
     if not build_conf.get("use_fixed_clock", True):
         return ""  # Let augur estimate rate from data
-    
+
     # Calculate fixed rate for builds that specify use_fixed_clock: true
     st = subtype(w.build_name)
     # Allow H5Nx subtypes (individual subtypes and the h5nx grouping)
