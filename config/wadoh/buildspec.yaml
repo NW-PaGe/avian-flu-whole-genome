@@ -70,6 +70,7 @@ phases:
           --aws-batch-job ${BATCH_JOB_DEFINITION} \
           --aws-batch-s3-bucket ${S3_BUCKET} \
           ${BUILD_TARGET} \
+          --configfile ${CONFIG_FILES} \
           2>&1 | tee /tmp/nextstrain_output.log
 
         # Extract the Batch Job ID from the captured output
