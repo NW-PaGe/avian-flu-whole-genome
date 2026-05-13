@@ -82,7 +82,7 @@ rule filter:
     """
     input:
         sequences = lambda w: get_build_files(w, "sequences"),
-        metadata = "results/{build_name}/genome/metadata.tsv",
+        metadata = rules.process_metadata.output.cleaned_metadata,
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
@@ -289,7 +289,7 @@ rule refine:
     input:
         tree = "results/{build_name}/genome/tree-raw.nwk",
         alignment = "results/{build_name}/genome/aligned_final.fasta",
-        metadata = lambda w: get_build_files(w, "metadata"),
+        metadata = rules.process_metadata.output.cleaned_metadata,
     output:
         tree = "results/{build_name}/genome/tree.nwk",
         node_data = "results/{build_name}/genome/branch-lengths.json"
@@ -362,7 +362,7 @@ rule traits:
     message: "Inferring ancestral traits for {params.columns!s}"
     input:
         tree = rules.refine.output.tree,
-        metadata = lambda w: get_build_files(w, "metadata")
+        metadata = rules.process_metadata.output.cleaned_metadata
     output:
         node_data = "results/{build_name}/genome/traits.json"
     params:
@@ -438,7 +438,7 @@ def get_export_node_data(wildcards):
 rule export:
     input:
         tree = "results/{build_name}/genome/tree.nwk",
-        metadata = lambda w: get_build_files(w, "metadata"),
+        metadata = rules.process_metadata.output.cleaned_metadata,
         node_data = lambda w: get_export_node_data(w),
         colors = lambda w: get_build_files(w, "colors"),
         auspice_config = lambda w: get_build_files(w, "auspice_config"),
