@@ -57,7 +57,7 @@ phases:
 
       # Downloading h5n1 files
       - echo "Downloading new H5N1 GISAID data"
-      - aws s3 sync s3://wamep-flu-database/data/cleaned/merged/h5n1/ new_data/
+      - aws s3 sync s3://wamep-flu-database/data/cleaned/merged/h5n1/ new_data/h5n1/
 
       - echo "Submitting ${BUILD_NAME} build to AWS Batch..."
       - |
