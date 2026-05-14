@@ -59,15 +59,30 @@ def get_build_files(wildcards, file_key):
 
     return file_path
 
+
+rule process_metadata:
+    message:
+        """
+        Processing metadata from XLSX to TSV
+        """
+    input:
+        raw_metadata = lambda w: get_build_files(w, "metadata"),
+    output:
+        cleaned_metadata = "results/{build_name}/genome/metadata.tsv"
+    shell:
+        """
+        python scripts/process_metadata.py \
+            --input {input.raw_metadata} \
+            --output {output.cleaned_metadata}
+        """
+
 rule filter:
     """
     Filtering using augur subsample
     """
     input:
         sequences = lambda w: get_build_files(w, "sequences"),
-        metadata = lambda w: get_build_files(w, "metadata"),
-        #include = lambda w: get_build_files(w, "include"),
-        #exclude = lambda w: get_build_files(w, "exclude"),
+        metadata = rules.process_metadata.output.cleaned_metadata,
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
@@ -221,11 +236,11 @@ def clock_rate(w):
     Returns empty string if use_fixed_clock is False, allowing augur to estimate rate from data.
     """
     build_conf = config["builds"][w.build_name]
-    
+
     # Check if we should use fixed clock
     if not build_conf.get("use_fixed_clock", True):
         return ""  # Let augur estimate rate from data
-    
+
     # Calculate fixed rate for builds that specify use_fixed_clock: true
     st = subtype(w.build_name)
     # Allow H5Nx subtypes (individual subtypes and the h5nx grouping)
@@ -274,7 +289,7 @@ rule refine:
     input:
         tree = "results/{build_name}/genome/tree-raw.nwk",
         alignment = "results/{build_name}/genome/aligned_final.fasta",
-        metadata = lambda w: get_build_files(w, "metadata"),
+        metadata = rules.process_metadata.output.cleaned_metadata,
     output:
         tree = "results/{build_name}/genome/tree.nwk",
         node_data = "results/{build_name}/genome/branch-lengths.json"
@@ -347,7 +362,7 @@ rule traits:
     message: "Inferring ancestral traits for {params.columns!s}"
     input:
         tree = rules.refine.output.tree,
-        metadata = lambda w: get_build_files(w, "metadata")
+        metadata = rules.process_metadata.output.cleaned_metadata
     output:
         node_data = "results/{build_name}/genome/traits.json"
     params:
@@ -423,7 +438,7 @@ def get_export_node_data(wildcards):
 rule export:
     input:
         tree = "results/{build_name}/genome/tree.nwk",
-        metadata = lambda w: get_build_files(w, "metadata"),
+        metadata = rules.process_metadata.output.cleaned_metadata,
         node_data = lambda w: get_export_node_data(w),
         colors = lambda w: get_build_files(w, "colors"),
         auspice_config = lambda w: get_build_files(w, "auspice_config"),
