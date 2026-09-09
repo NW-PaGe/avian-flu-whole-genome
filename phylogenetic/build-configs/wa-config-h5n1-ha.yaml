@@ -9,6 +9,7 @@ builds:
   # Build 1: HA segment only
   # Output: auspice/h5n1-ha-only.json
   h5n1-ha-only:
+    nextclade_clade: 2.3.4.4b
     subtype: h5n1
     segments:
       - ha
@@ -27,13 +28,13 @@ builds:
 
         #Washington sampling
         state:
-          query: division == 'Washington'
+          query: (division == 'Washington') & (Nextclade_Clade == {nextclade_clade})
           min_date: 2000
           min_length: 1600
 
         # Regional context
         regional_context:
-          query: division == ['Idaho','Oregon','British Columbia','Alaska']
+          query: (division == ['Idaho','Oregon','British Columbia','Alaska']) & (Nextclade_Clade == {nextclade_clade})
           group_by: ['month','year','region']
           sequences_per_group: 400
           #subsample-max-sequences: 400
@@ -43,7 +44,7 @@ builds:
 
         # Broader context: The rest of USA
         national_context:
-          query: (region == 'North America') & (division not in ['Washington','Idaho','Oregon','British Columbia','Alaska']) #(division not in ['Washington'])
+          query: (region == 'North America') & (division not in ['Washington','Idaho','Oregon','British Columbia','Alaska']) & (Nextclade_Clade == {nextclade_clade}) #(division not in ['Washington'])
           group_by: ['month','year']
           sequences_per_group: 20
           #max_sequences: 1000
@@ -52,7 +53,7 @@ builds:
 
         # World context
         world_context:
-          query: region not in ['North America']
+          query: (region not in ['North America']) & (Nextclade_Clade == {nextclade_clade})
           group_by: ['month','year']
           sequences_per_group: 2
           #max_sequences: 100
@@ -61,7 +62,7 @@ builds:
 
         # Asia context
         asia_context:
-          query: region == 'Asia'
+          query: (region == 'Asia') & (Nextclade_Clade == {nextclade_clade})
           group_by: ['month','year']
           sequences_per_group: 2
           #max_sequences: 100
