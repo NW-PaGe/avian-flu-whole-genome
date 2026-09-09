@@ -16,6 +16,8 @@ region	south_america	#E56C2F
 region	south america	#E56C2F
 region	north_america	#DC2F24
 region	north america	#DC2F24
+division	washington	#DC2F24
+division	oregon	#2986CC
 subtype	h5n1	#4274CE
 subtype	h5n2	#E39B39
 subtype	h5n3	#4042C7

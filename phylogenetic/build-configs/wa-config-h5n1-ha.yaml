@@ -13,21 +13,17 @@ builds:
     segments:
       - ha
     files:
-      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
-      sequences: "new_data/h5n1/fasta/raw_sequences_{segment}.fasta"
-      metadata: "new_data/h5n1/metadata/metadata.xlsx"
-      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
-      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+      reference_files: "config/{subtype}/reference_{subtype}_{segment}.gb"
+      sequences: "new_data/{subtype}/fasta/raw_sequences_{segment}.fasta"
+      metadata: "new_data/{subtype}/metadata/metadata.xlsx"
+      colors: "config/{subtype}/colors.tsv"
+      auspice_config: "config/{subtype}/auspice_config_gisaid.json"
     subsample:
       defaults:
         exclude_ambiguous_dates_by: year
         exclude: "config/h5n1/exclude.txt"
         include: "config/h5n1/include.txt"
       samples:
-        state:
-          query: division == 'Washington'
-          max_sequences: 100
-          min_date: "2020-01-01"
 
         #Washington sampling
         state:

@@ -1,9 +1,9 @@
 {
-  "title": "Influenza A/H5N1 testing, HA tree",
+  "title": "Influenza A/H5N1 - Washingon focused, HA tree",
   "maintainers": [
     {"name": "WA DOH Molecular Epidemiology Program", "url": "https://github.com/NW-PaGe"}
   ],
-  "build_url": "https://github.com/NW-PaGe",
+  "build_url": "https://github.com/NW-PaGe/avian-flu-whole-genome",
   "extensions": {
     "nextclade": {
       "pathogen": {
@@ -21,6 +21,11 @@
           "NS1",
           "NS2"
       ],
+      "data_provenance": [
+        {
+          "name": "GISAID"
+        }
+      ],
       "attributes": {
         "name": "H5N1 Washington HA build",
         "reference name": "concatenated ancestral sequences",
@@ -30,6 +35,11 @@
     }
   },
   "colorings": [
+    {
+      "key": "Nextclade_Clade",
+      "title": "Clade",
+      "type": "categorical"
+    },
     {
       "key": "gt",
       "title": "Genotype",
@@ -102,9 +112,8 @@
     "division"
   ],
   "display_defaults": {
-    "map_triplicate": false,
+    "map_triplicate": true,
     "color_by": "region",
-    "geo_resolution": "division",
     "distance_measure": "div"
   },
   "filters": [
