@@ -53,7 +53,7 @@ builds:
 
         # World context
         world_context:
-          query: (region not in ['North America']) & Clade == '2.3.4.4b')
+          query: (region not in ['North America']) & (Clade == '2.3.4.4b')
           group_by: ['month','year']
           sequences_per_group: 2
           #max_sequences: 100
