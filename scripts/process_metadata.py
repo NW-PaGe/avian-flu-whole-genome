@@ -48,7 +48,7 @@ def main():
     metadata['date'] = metadata['date'].apply(lambda x: x if 'XX' in x else pd.to_datetime(x, errors='coerce').strftime('%Y-%m-%d') if pd.to_datetime(x, errors='coerce') is not pd.NaT else 'NaT')
 
     # Subset to the required columns
-    metadata_subset = metadata[['strain', 'virus', 'host', 'date', 'region', 'country', 'division', 'location']]
+    metadata_subset = metadata[['strain', 'virus', 'host', 'date', 'region', 'country', 'division', 'location', 'Clade']]
 
     # Write the output to a .tsv file
     metadata_subset.to_csv(args.output, sep='\t', index=False)

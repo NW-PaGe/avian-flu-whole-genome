@@ -9,35 +9,32 @@ builds:
   # Build 1: HA segment only
   # Output: auspice/h5n1-ha-only.json
   h5n1-ha-only:
+    nextclade_clade: 2.3.4.4b
     subtype: h5n1
     segments:
       - ha
     files:
-      reference_files: "config/{subtype}/reference_h5n1_{segment}.gb"
-      sequences: "new_data/h5n1/fasta/raw_sequences_{segment}.fasta"
-      metadata: "new_data/h5n1/metadata/metadata.xlsx"
-      colors: "config/{subtype}/colors_h5n1-franklin-county-outbreak.tsv"
-      auspice_config: "config/{subtype}/auspice_config_h5n1-franklin-county-outbreak.json"
+      reference_files: "config/{subtype}/reference_{subtype}_{segment}.gb"
+      sequences: "new_data/{subtype}/fasta/raw_sequences_{segment}.fasta"
+      metadata: "new_data/{subtype}/metadata/metadata.xlsx"
+      colors: "config/{subtype}/colors.tsv"
+      auspice_config: "config/{subtype}/auspice_config_gisaid.json"
     subsample:
       defaults:
         exclude_ambiguous_dates_by: year
         exclude: "config/h5n1/exclude.txt"
         include: "config/h5n1/include.txt"
       samples:
-        state:
-          query: division == 'Washington'
-          max_sequences: 100
-          min_date: "2020-01-01"
 
         #Washington sampling
         state:
-          query: division == 'Washington'
+          query: (division == 'Washington') & (Clade == '2.3.4.4b')
           min_date: 2000
           min_length: 1600
 
         # Regional context
         regional_context:
-          query: division == ['Idaho','Oregon','British Columbia','Alaska']
+          query: (division == ['Idaho','Oregon','British Columbia','Alaska']) & (Clade == '2.3.4.4b')
           group_by: ['month','year','region']
           sequences_per_group: 400
           #subsample-max-sequences: 400
@@ -47,7 +44,7 @@ builds:
 
         # Broader context: The rest of USA
         national_context:
-          query: (region == 'North America') & (division not in ['Washington','Idaho','Oregon','British Columbia','Alaska']) #(division not in ['Washington'])
+          query: (region == 'North America') & (division not in ['Washington','Idaho','Oregon','British Columbia','Alaska']) & (Clade == '2.3.4.4b') #(division not in ['Washington'])
           group_by: ['month','year']
           sequences_per_group: 20
           #max_sequences: 1000
@@ -56,7 +53,7 @@ builds:
 
         # World context
         world_context:
-          query: region not in ['North America']
+          query: (region not in ['North America']) & (Clade == '2.3.4.4b')
           group_by: ['month','year']
           sequences_per_group: 2
           #max_sequences: 100
@@ -65,7 +62,7 @@ builds:
 
         # Asia context
         asia_context:
-          query: region == 'Asia'
+          query: (region == 'Asia') & (Clade == '2.3.4.4b')
           group_by: ['month','year']
           sequences_per_group: 2
           #max_sequences: 100
