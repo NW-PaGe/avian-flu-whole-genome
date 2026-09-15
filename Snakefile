@@ -366,7 +366,7 @@ rule traits:
     output:
         node_data = "results/{build_name}/genome/traits.json"
     params:
-        columns = 'host',
+        columns = ['host', 'region', 'country'],
         sampling_bias_correction = 5
     shell:
         """
