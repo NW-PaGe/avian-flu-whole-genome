@@ -11,3 +11,4 @@ test_data/fasta/*
 test_data/metadata/*
 test_data/*
 new_data/
+private_data/
