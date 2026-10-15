@@ -37,6 +37,9 @@ def subtype(build_name):
     """Get the subtype for a build"""
     return config["builds"][build_name]["subtype"]
 
+    #merge_inputs.smk has no {subtype} wildcard so resolving this here
+ALL_SUBTYPES = sorted({b["subtype"] for b in config["builds"].values()})
+
 # Simple output naming - just use build name
 rule all:
     input:
@@ -59,30 +62,56 @@ def get_build_files(wildcards, file_key):
 
     return file_path
 
+# --- metadata preprocessing: collect inputs and resolve {subtype} at parse time ---
+def get_all_metadata_inputs():
+    """Return list of tuples (input_name, metadata_path_template) from top-level config inputs/additional_inputs"""
+    return [(inp['name'], inp['metadata']) for inp in [*config.get('inputs', []), *config.get('additional_inputs', [])] if 'metadata' in inp]
+
+# Determine subtype to substitute into templates (require a single subtype across builds)
+ALL_SUBTYPES = sorted({b.get("subtype", "") for b in config.get("builds", {}).values() if b.get("subtype", "")})
+if len(ALL_SUBTYPES) == 0:
+    raise ValueError("No 'subtype' found in any build in config; needed to resolve metadata paths containing '{subtype}'")
+if len(ALL_SUBTYPES) > 1:
+    raise ValueError(f"Multiple subtypes found in builds: {ALL_SUBTYPES}. process_metadata expects a single subtype; if you need multi-subtype support we can extend this rule.")
+
+THE_SUBTYPE = ALL_SUBTYPES[0]
+
+# Build a concrete list of (name, resolved_metadata_path) at parse time
+INPUT_METADATA_SOURCES = [(name, path_template.replace("{subtype}", THE_SUBTYPE)) for name, path_template in get_all_metadata_inputs()]
 
 rule process_metadata:
     message:
-        """
-        Processing metadata from XLSX to TSV
-        """
+        "Processing metadata from XLSX/CSV to TSV (global)"
+    # concrete list of input files (no wildcards)
     input:
-        raw_metadata = lambda w: get_build_files(w, "metadata"),
+        [path for _, path in INPUT_METADATA_SOURCES]
+    # one preprocessed TSV per input name
     output:
-        cleaned_metadata = "results/{build_name}/genome/metadata.tsv"
-    shell:
-        """
-        python scripts/process_metadata.py \
-            --input {input.raw_metadata} \
-            --output {output.cleaned_metadata}
-        """
+        expand("results/preprocessed/{input_name}_metadata.tsv",
+               input_name=[name for name, _ in INPUT_METADATA_SOURCES])
+    params:
+        script = "scripts/process_metadata.py",
+        input_sources = INPUT_METADATA_SOURCES
+    run:
+        shell("mkdir -p results/preprocessed")
+        for input_name, metadata_path in params.input_sources:
+            output_path = f"results/preprocessed/{input_name}_metadata.tsv"
+            shell(f"""
+                python {params.script} \
+                    --input {metadata_path} \
+                    --output {output_path}
+            """)
+
+# Include merge_inputs rule to handle private data spike in
+include: "rules/merge_inputs.smk"
 
 rule filter:
     """
     Filtering using augur subsample
     """
     input:
-        sequences = lambda w: get_build_files(w, "sequences"),
-        metadata = rules.process_metadata.output.cleaned_metadata,
+        sequences = rules.merge_sequences.output.sequences,
+        metadata = rules.merge_metadata.output.metadata,
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
@@ -168,7 +197,7 @@ def get_genbank_input(wildcards):
     build_conf = config["builds"][wildcards.build_name]
 
     # Get the reference file pattern from config
-    ref_pattern = build_conf["files"]["reference_files"]
+    ref_pattern = build_conf["inputs"]["reference_files"]
 
     # Substitute subtype if present in the pattern
     if "{subtype}" in ref_pattern:
@@ -289,7 +318,7 @@ rule refine:
     input:
         tree = "results/{build_name}/genome/tree-raw.nwk",
         alignment = "results/{build_name}/genome/aligned_final.fasta",
-        metadata = rules.process_metadata.output.cleaned_metadata,
+        metadata = rules.merge_metadata.output.metadata,
     output:
         tree = "results/{build_name}/genome/tree.nwk",
         node_data = "results/{build_name}/genome/branch-lengths.json"
@@ -362,7 +391,7 @@ rule traits:
     message: "Inferring ancestral traits for {params.columns!s}"
     input:
         tree = rules.refine.output.tree,
-        metadata = rules.process_metadata.output.cleaned_metadata
+        metadata = rules.merge_metadata.output.metadata
     output:
         node_data = "results/{build_name}/genome/traits.json"
     params:
@@ -438,7 +467,7 @@ def get_export_node_data(wildcards):
 rule export:
     input:
         tree = "results/{build_name}/genome/tree.nwk",
-        metadata = rules.process_metadata.output.cleaned_metadata,
+        metadata = rules.merge_metadata.output.metadata,
         node_data = lambda w: get_export_node_data(w),
         colors = lambda w: get_build_files(w, "colors"),
         auspice_config = lambda w: get_build_files(w, "auspice_config"),
