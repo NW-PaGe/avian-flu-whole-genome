@@ -98,7 +98,7 @@ rule process_metadata:
         """
 
 # Include merge_inputs rule to handle private data spike in
-#include: "rules/merge_inputs.smk"
+include: "rules/merge_inputs.smk"
 
 rule filter:
     """
