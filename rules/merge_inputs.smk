@@ -129,7 +129,7 @@ rule merge_metadata:
         num_of_inputs = lambda w, input: len(input),
         metadata = lambda w, input: list(map("=".join, input.items()))
     output:
-        metadata = "results/metadata.tsv"
+        metadata = "results/{subtype}/metadata.tsv"
     log:
         "logs/merge_metadata.txt",
     benchmark:
@@ -161,7 +161,7 @@ rule merge_sequences:
     params:
         num_of_inputs = lambda w, input: len(input),
     output:
-        sequences = "results/sequences_{segment}.fasta"
+        sequences = "results/{subtype}/sequences_{segment}.fasta"
     log:
         "logs/{segment}/merge_sequences.txt",
     benchmark:

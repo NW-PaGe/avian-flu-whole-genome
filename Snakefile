@@ -42,17 +42,17 @@ rule all:
     input:
         expand("auspice/{build_name}.json", build_name=BUILD_NAMES)
 
-def get_input_entry(name=None):
-    """Return one entry from config["inputs"] (the first one, or the one with this name)"""
-    inputs = config["inputs"]
-    if isinstance(inputs, dict):
-        return inputs
-    if name is None:
-        return inputs[0]
-    for entry in inputs:
-        if entry.get("name") == name:
-            return entry
-    raise ValueError(f"No input named '{name}' in config['inputs']")
+#def get_input_entry(name=None):
+#    """Return one entry from config["inputs"] (the first one, or the one with this name)"""
+#    inputs = config["inputs"]
+#    if isinstance(inputs, dict):
+#        return inputs
+#    if name is None:
+#        return inputs[0]
+#    for entry in inputs:
+#        if entry.get("name") == name:
+#            return entry
+#    raise ValueError(f"No input named '{name}' in config['inputs']")
 
 
 # Dynamic rule to access files for each build
@@ -63,12 +63,7 @@ def get_build_files(wildcards, file_key):
     then falls back to the build's own "files" section.
     """
     build_conf = config["builds"][wildcards.build_name]
-    input_entry = get_input_entry()
-
-    if file_key != "name" and file_key in input_entry:
-        file_path = input_entry[file_key]
-    else:
-        file_path = build_conf["files"][file_key]
+    file_path = build_conf["files"][file_key]
 
     # Handle subtype wildcard if present
     if "{subtype}" in file_path:
@@ -80,6 +75,69 @@ def get_build_files(wildcards, file_key):
 
     return file_path
 
+    # rules/merge_inputs.smk raises InvalidConfigError but does not define it.
+    # (It no longer calls path_or_url, so that helper is not needed here.)
+class InvalidConfigError(Exception):
+    pass
+
+    # Constrain {segment} to the segments the config names, so "aligned_final.fasta"
+    # is not also matched by rule align's output pattern with segment="final".
+ALL_SEGMENTS = sorted({seg for b in config["builds"].values() for seg in b["segments"]})
+
+wildcard_constraints:
+    segment = "|".join(ALL_SEGMENTS),
+
+RAW_METADATA = {
+    i["name"]: i["metadata"].replace("{subtype}", SUBTYPE)
+    for i in [*config.get("inputs", []), *config.get("additional_inputs", [])]
+    if "metadata" in i
+}
+
+# This workflow runs ONE subtype per config. merge_inputs.smk's outputs are
+# subtype-scoped (results/{subtype}/...), so the value is still carried as a
+# Snakemake wildcard, but every build in a given run resolves to the same one.
+# Validate that up front rather than letting a mixed config resolve silently.
+ALL_SUBTYPES = sorted({b["subtype"] for b in config["builds"].values()})
+if len(ALL_SUBTYPES) != 1:
+    raise InvalidConfigError(
+        f"All builds in one config must share a subtype; found {', '.join(ALL_SUBTYPES)}. "
+        "Split them into one config per subtype and run them separately."
+    )
+SUBTYPE = ALL_SUBTYPES[0]
+
+wildcard_constraints:
+    subtype = SUBTYPE,
+
+if RAW_METADATA:
+    wildcard_constraints:
+        input_name = "|".join(RAW_METADATA),
+
+
+# Metadata inputs are either .xlsx (an Excel export that needs cleaning) or .tsv
+# (already in Nextstrain shape). Nothing else is accepted.
+def _needs_cleaning(path, input_name):
+    """
+    True  -> .xlsx; run scripts/process_metadata.py over it.
+    False -> .tsv; already clean, just normalise it through `augur read-file`.
+    Raises on anything else rather than guessing.
+    """
+    p = str(path)
+    if p.endswith(".xlsx"):
+        return True
+    if p.endswith(".tsv"):
+        return False
+    raise InvalidConfigError(
+        f"Input {input_name!r} metadata {p!r} has an unsupported extension. "
+        "This pipeline accepts .xlsx (cleaned via scripts/process_metadata.py) "
+        "or .tsv (used as-is)."
+    )
+
+
+# Resolved at DAG-build time so a bad extension fails immediately, naming the
+# input, rather than part-way through a run.
+NEEDS_CLEANING = {name: _needs_cleaning(path, name) for name, path in RAW_METADATA.items()}
+
+
 
 rule process_metadata:
     message:
@@ -87,14 +145,26 @@ rule process_metadata:
         Processing metadata from XLSX to TSV
         """
     input:
-        raw_metadata = lambda w: get_build_files(w, "metadata"),
+        raw_metadata = lambda w: RAW_METADATA[w.input_name].replace("{subtype}", w.subtype),
     output:
-        cleaned_metadata = "results/{build_name}/genome/metadata.tsv"
+        cleaned_metadata = "results/{build_name}/preprocessed/{input_name}/metadata.tsv"
+    params:
+        needs_cleaning = lambda w: NEEDS_CLEANING[w.input_name],
+    log:
+        "logs/{subtype}/process_metadata_{input_name}.txt"
     shell:
-        """
-        python scripts/process_metadata.py \
-            --input {input.raw_metadata} \
-            --output {output.cleaned_metadata}
+        r"""
+        exec &> >(tee {log:q})
+
+        if [[ "{params.needs_cleaning}" == "True" ]]; then
+            echo "[INFO] {wildcards.input_name}: Excel input - cleaning with scripts/process_metadata.py"
+            python scripts/process_metadata.py \
+                --input {input.raw_metadata:q} \
+                --output {output.cleaned_metadata:q}
+        else
+            echo "[INFO] {wildcards.input_name}: already-clean TSV - passing through augur read-file"
+            augur read-file {input.raw_metadata:q} > {output.cleaned_metadata:q}
+        fi
         """
 
 # Include merge_inputs rule to handle private data spike in
@@ -105,8 +175,8 @@ rule filter:
     Filtering using augur subsample
     """
     input:
-        sequences = lambda w: get_build_files(w, "sequences"),
-        metadata = rules.process_metadata.output.cleaned_metadata,
+        sequences = f"results/{SUBTYPE}/sequences_{{segment}}.fasta",
+        metadata = f"results/{SUBTYPE}/metadata.tsv",
     output:
         sequences = "results/{build_name}/genome/sequences_{segment}.fasta",
         metadata = "results/{build_name}/genome/filtered_metadata_{segment}.tsv"
@@ -313,7 +383,7 @@ rule refine:
     input:
         tree = "results/{build_name}/genome/tree-raw.nwk",
         alignment = "results/{build_name}/genome/aligned_final.fasta",
-        metadata = rules.process_metadata.output.cleaned_metadata,
+        metadata = f"results/{SUBTYPE}/metadata.tsv",
     output:
         tree = "results/{build_name}/genome/tree.nwk",
         node_data = "results/{build_name}/genome/branch-lengths.json"
@@ -386,7 +456,7 @@ rule traits:
     message: "Inferring ancestral traits for {params.columns!s}"
     input:
         tree = rules.refine.output.tree,
-        metadata = rules.process_metadata.output.cleaned_metadata
+        metadata = f"results/{SUBTYPE}/metadata.tsv",
     output:
         node_data = "results/{build_name}/genome/traits.json"
     params:
@@ -462,7 +532,7 @@ def get_export_node_data(wildcards):
 rule export:
     input:
         tree = "results/{build_name}/genome/tree.nwk",
-        metadata = rules.process_metadata.output.cleaned_metadata,
+        metadata = f"results/{SUBTYPE}/metadata.tsv",
         node_data = lambda w: get_export_node_data(w),
         colors = lambda w: get_build_files(w, "colors"),
         auspice_config = lambda w: get_build_files(w, "auspice_config"),
