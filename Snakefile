@@ -42,16 +42,37 @@ rule all:
     input:
         expand("auspice/{build_name}.json", build_name=BUILD_NAMES)
 
+def get_input_entry(name=None):
+    """Return one entry from config["inputs"] (the first one, or the one with this name)"""
+    inputs = config["inputs"]
+    if isinstance(inputs, dict):
+        return inputs
+    if name is None:
+        return inputs[0]
+    for entry in inputs:
+        if entry.get("name") == name:
+            return entry
+    raise ValueError(f"No input named '{name}' in config['inputs']")
+
+
 # Dynamic rule to access files for each build
 def get_build_files(wildcards, file_key):
-    """Get file path for a specific build and file key"""
+    """Get file path for a specific build and file key
+
+    Looks in the top-level config["inputs"] first (shared by all builds),
+    then falls back to the build's own "files" section.
+    """
     build_conf = config["builds"][wildcards.build_name]
-    file_path = build_conf["files"][file_key]
+    input_entry = get_input_entry()
+
+    if file_key != "name" and file_key in input_entry:
+        file_path = input_entry[file_key]
+    else:
+        file_path = build_conf["files"][file_key]
 
     # Handle subtype wildcard if present
     if "{subtype}" in file_path:
-        build_subtype = build_conf["subtype"]
-        file_path = file_path.replace("{subtype}", build_subtype)
+        file_path = file_path.replace("{subtype}", build_conf["subtype"])
 
     # Handle segment wildcard if present
     if "{segment}" in file_path and hasattr(wildcards, "segment"):
@@ -75,6 +96,9 @@ rule process_metadata:
             --input {input.raw_metadata} \
             --output {output.cleaned_metadata}
         """
+
+# Include merge_inputs rule to handle private data spike in
+#include: "rules/merge_inputs.smk"
 
 rule filter:
     """
