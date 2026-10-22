@@ -87,13 +87,7 @@ ALL_SEGMENTS = sorted({seg for b in config["builds"].values() for seg in b["segm
 wildcard_constraints:
     segment = "|".join(ALL_SEGMENTS),
 
-RAW_METADATA = {
-    i["name"]: i["metadata"].replace("{subtype}", SUBTYPE)
-    for i in [*config.get("inputs", []), *config.get("additional_inputs", [])]
-    if "metadata" in i
-}
-
-# This workflow runs ONE subtype per config. merge_inputs.smk's outputs are
+ #This workflow runs ONE subtype per config. merge_inputs.smk's outputs are
 # subtype-scoped (results/{subtype}/...), so the value is still carried as a
 # Snakemake wildcard, but every build in a given run resolves to the same one.
 # Validate that up front rather than letting a mixed config resolve silently.
@@ -107,6 +101,12 @@ SUBTYPE = ALL_SUBTYPES[0]
 
 wildcard_constraints:
     subtype = SUBTYPE,
+
+RAW_METADATA = {
+    i["name"]: i["metadata"].replace("{subtype}", SUBTYPE)
+    for i in [*config.get("inputs", []), *config.get("additional_inputs", [])]
+    if "metadata" in i
+}
 
 if RAW_METADATA:
     wildcard_constraints:
@@ -147,7 +147,7 @@ rule process_metadata:
     input:
         raw_metadata = lambda w: RAW_METADATA[w.input_name].replace("{subtype}", w.subtype),
     output:
-        cleaned_metadata = "results/{build_name}/preprocessed/{input_name}/metadata.tsv"
+        cleaned_metadata = "results/preprocessed/{subtype}/{input_name}_metadata.tsv"
     params:
         needs_cleaning = lambda w: NEEDS_CLEANING[w.input_name],
     log:
